@@ -214,24 +214,7 @@ rm(res_bjs, res_temp)
 data$treat_dcm <- ifelse(data$ano < data$year_first_treated, 0, 1)
 
 data$code_id <- as.numeric(data$code_id)
-
-multiplegt_res <- did_multiplegt_old(
-  df = data,
-  Y = "rais_",
-  G = "year_first_treated",
-  T = "ano",
-  D = "treat_dcm",
-  #i = "code_id",
-  controls = c("code_id","ano_sexo", "ano_branco", "ano_ensino"),
-  dynamic = 5,
-  placebo = 5,
-  brep = 50,
-  #parallel = T,
-  #cluster = "code_id"
-  #,
-  # homogeneous_att = FALSE,
-  # mode = "old"
-)
+
 
 # --------------------------- #
 ## DISCLAIMER
