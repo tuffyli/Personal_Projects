@@ -181,7 +181,7 @@ res_bjs <- did_imputation(
 )
 
 
-#Preparing the resul data
+#Preparing the result data
 res_temp <- res_bjs %>% 
   mutate(
     colour = "blue",
@@ -214,7 +214,6 @@ rm(res_bjs, res_temp)
 data$treat_dcm <- ifelse(data$ano < data$year_first_treated, 0, 1)
 
 data$code_id <- as.numeric(data$code_id)
-
 
 # --------------------------- #
 ## DISCLAIMER
@@ -328,4 +327,5 @@ p
 
 ggsave(paste0(data_output_path, "estimators.jpeg"), plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
 ggsave(paste0(data_output_path, "estimators.pdf"), plot = p, device = "pdf", width = 10, height = 6, dpi = 300)
+
 
