@@ -2,7 +2,7 @@
 # Overall Working Paper Code
 # Main regression and results
 # Last edited by: Tuffy Licciardi Issa
-# Date: 20/10/2025
+# Date: 09/11/2025
 # ---------------------------------------------------------------------------- #
 
 # ---------------------------------------------------------------------------- #
@@ -21,21 +21,55 @@ library(knitr)
 library(grid)
 library(didimputation)
 library(DIDmultiplegt)
+library(tidyr)
 
 # ----------------------------------------------------------------------------- #
 # 1. DATA
 # ----------------------------------------------------------------------------- #
 
+start_time <- Sys.time()
+
 data <- read.csv("C:/Users/tuffy/Documents/IC/Bases/base_atual_dum_v3.csv")
 
+# ----------------------- #
+#1.1 Result Tables ----
+# ----------------------- #
+
+
+#' The first step is to create a result dataframe, where the values will be stored.
+#' Throughout the code I will be filling the slots to create the final result table
+#' for each explored category.
+
+result_rais <- data.frame(
+  names = c("ATT", " ", "Pre-Avg"," "),
+  att_nc = rep(NA, times = length(c("ATT", " ","Pre-Avg"," "))),  #No controls
+  att_fc = rep(NA, times = length(c("ATT", " ","Pre-Avg"," "))),  #Full controls
+  att_bc = rep(NA, times = length(c("ATT", " ","Pre-Avg"," "))),  #FC Blue-Collar
+  att_wc = rep(NA, times = length(c("ATT", " ","Pre-Avg"," ")))   #FC White-Collar
+)
+
+result_cbo <- data.frame(
+  names = c("ATT", " ", "Pre-Avg"," "),
+  att_nc = rep(NA, times = length(c("ATT", " ","Pre-Avg"," "))),  #No controls
+  att_fc = rep(NA, times = length(c("ATT", " ","Pre-Avg"," "))),  #Full controls
+  att_bc = rep(NA, times = length(c("ATT", " ","Pre-Avg"," "))),  #FC Blue-Collar
+  att_wc = rep(NA, times = length(c("ATT", " ","Pre-Avg"," ")))   #FC White-Collar
+)
+
+result_cnae <- data.frame(
+  names = c("ATT", " ", "Pre-Avg"," "),
+  att_nc = rep(NA, times = length(c("ATT", " ","Pre-Avg"," "))),  #No controls
+  att_fc = rep(NA, times = length(c("ATT", " ","Pre-Avg"," "))),  #Full controls
+  att_bc = rep(NA, times = length(c("ATT", " ","Pre-Avg"," "))),  #FC Blue-Collar
+  att_wc = rep(NA, times = length(c("ATT", " ","Pre-Avg"," ")))   #FC White-Collar
+)
 
 # 2. Main Graphs ----
 ## 2.1 Function ----
 plot <- function(df,
                  plot_title,
                  var_y,
-                 controles
-) {
+                 controles) {
   
   
   ini <- Sys.time()
@@ -73,6 +107,9 @@ plot <- function(df,
   )
   est_calsan <- aggte( MP = calsan_did, type = "dynamic", na.rm = TRUE)
   print(est_calsan)
+  
+  att_calsan <- est_calsan$overall.att
+  att_se     <- est_calsan$overall.se
   
   ##Extraindo os gráficos das duas estimações##
   plot_sunab <- iplot(est_sunab, ref.line = -1,
@@ -121,21 +158,21 @@ plot <- function(df,
                              df_completo$group == 2 & df_completo$x != -1 ~ df_completo$x + 0.2,
                              TRUE ~ NA)
   
-  return(df_completo)
   
+
   
   fim <- Sys.time()
-  
   
   delta <- difftime(fim, ini, units = "secs")
   mins <- floor(as.numeric(delta) / 60)
   secs <- round(as.numeric(delta) %% 60)
   
-  message("---------------------------------------------")
-  message("Time: ",mins," mins and ", secs, " s")
-  message("---------------------------------------------")  
+  print("---------------------------------------------")
+  print(paste0("Total time elapsed: ",mins," mins e ", secs, " s"))
+  print("---------------------------------------------")
+  rm(delta, ini, fim, mins, secs)
   
-  rm(delta_t, ini, fim, mins, secs)
+  return(df_completo) #Completed DF
   
 }
 
@@ -147,43 +184,40 @@ estimacoes_rais <- plot(data,
                         plot_title = '',
                         var_y = "rais_")
 
-if (!dir.exists("C:/Users/tuffy/Documents/IC/Graphs")) {
-  dir.create("C:/Users/tuffy/Documents/IC/Graphs")
-}
-
-
-
-#Para retir
-
-
-
-p <- ggplot(estimacoes_rais, aes(x = x, y = y, color = colour, group = group)) +
-  geom_point(size = 3) +
-  geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.5) +
-  geom_hline(yintercept = 0, color = "#D62728") +
-  geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
-  scale_color_manual(values=c('black','red'),labels=c("Callaway & Sant'anna","Sun & Abraham")) +
-  labs(x = "Years to treatment", y = '', colour = '') +
-  theme_minimal(base_size = 14) +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    axis.line.x = element_line(),
-    axis.line.y = element_line(),
-    legend.position = "bottom",
-    panel.grid.minor.x = element_blank()
-  ) +
-  scale_x_continuous(limits = c(-9.2, 5.2),
-                     breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
-                     labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4','+5')) +
-  scale_y_continuous(limits = c(-0.95, 0.155),
-                     breaks = c(-0.90,-0.75,-0.60,-0.45,-0.30,-0.15,0,0.15),
-                     labels = c('-0.90','-0.75','-0.60','-0.45','-0.30','-0.15','0','0.15'))
-
-
-
-ggsave("C:/Users/tuffy/Documents/IC/Graphs/plot_rais.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
-
+# if (!dir.exists("C:/Users/tuffy/Documents/IC/Graphs")) {
+#   dir.create("C:/Users/tuffy/Documents/IC/Graphs")
+# }
+# 
+# 
+# 
+# 
+# p <- ggplot(estimacoes_rais, aes(x = x, y = y, color = colour, group = group)) +
+#   geom_point(size = 3) +
+#   geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.5) +
+#   geom_hline(yintercept = 0, color = "#D62728") +
+#   geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
+#   scale_color_manual(values=c('black','red'),labels=c("Callaway & Sant'anna","Sun & Abraham")) +
+#   labs(x = "Years to treatment", y = '', colour = '') +
+#   theme_minimal(base_size = 14) +
+#   theme(
+#     panel.grid.major = element_blank(),
+#     panel.grid.minor = element_blank(),
+#     axis.line.x = element_line(),
+#     axis.line.y = element_line(),
+#     legend.position = "bottom",
+#     panel.grid.minor.x = element_blank()
+#   ) +
+#   scale_x_continuous(limits = c(-9.2, 5.2),
+#                      breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
+#                      labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4','+5')) +
+#   scale_y_continuous(limits = c(-0.95, 0.155),
+#                      breaks = c(-0.90,-0.75,-0.60,-0.45,-0.30,-0.15,0,0.15),
+#                      labels = c('-0.90','-0.75','-0.60','-0.45','-0.30','-0.15','0','0.15'))
+# 
+# 
+# 
+# ggsave("C:/Users/tuffy/Documents/IC/Graphs/plot_rais.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
+# 
 
 
 
@@ -191,9 +225,10 @@ ggsave("C:/Users/tuffy/Documents/IC/Graphs/plot_rais.jpeg", plot = p, device = "
 
 
 # ---------------------------------------------------------------------------- #
-## Retirando A SUNAB
+## Removing the SUNAB estimator
 
-est_rais2 <- calsun %>% 
+#This is the main graph, with the second estimator removed
+est_rais2 <- estimacoes_rais %>% 
   filter(group == 2) %>% 
   mutate(x = x - 0.2)
 
@@ -234,11 +269,10 @@ p
 
 
 
-ggsave("C:/Users/tuffy/Documents/IC/Graphs//united/plot_rais2_v3.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
-ggsave("C:/Users/tuffy/Documents/IC/Graphs//united/plot_rais2_v3.pdf", plot = p, device = "pdf", width = 10, height = 6, dpi = 300)
+ggsave("C:/Users/tuffy/Documents/IC/Graphs/united/plot_rais2_v3.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
+ggsave("C:/Users/tuffy/Documents/IC/Graphs/united/plot_rais2_v3.pdf", plot = p, device = "pdf", width = 10, height = 6, dpi = 300)
 
 
-rm(p)
 
 
 # ---------------------------------------------------------------------------- #
@@ -275,6 +309,12 @@ p <- ggplot(estimacoes_cbo, aes(x = x, y = y, color = colour, group = group)) +
 ggsave("Graphs/plot_cbo.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
 
 
+#Saving the Overall ATT in the results tables\
+result_cbo$att_fc[1] <- att_calsan
+result_cbo$att_fc[2] <- paste0("[",round(att_se, digits = 4),"]")
+
+rm(p, att_calsan, att_se)
+
 # ---------------------------------------------------------------------------- #
 ## 2.4 CNAE ----
 
@@ -308,6 +348,13 @@ p <- ggplot(estimacoes_cnae, aes(x = x, y = y, color = colour, group = group)) +
 
 
 ggsave("Graphs/plot_cnae.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
+
+
+#Saving the Overall ATT in the results tables\
+result_cnae$att_fc[1] <- att_calsan
+result_cnae$att_fc[2] <- paste0("[",round(att_se, digits = 4),"]")
+
+rm(p, att_calsan, att_se)
 
 gc()
 
@@ -358,7 +405,6 @@ p <- ggplot(estimacoes_brais, aes(x = x, y = y, color = colour, group = group)) 
 p
 
 ggsave("Graphs/plot_rais_bluecol.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
-
 
 
 # ---------------------------------------------------------------------------- #
@@ -763,7 +809,10 @@ stargazer(white_data,
 # ---------------------------------------------------------------------------- #
 # 6. ATT Values ----
 # ---------------------------------------------------------------------------- #
+
+
 ## 6.1 RAIS ----
+### 6.1.1 No Controls ----
 
 no_control <- did::att_gt(
   yname = "rais_",
@@ -782,6 +831,34 @@ est_calsan_sc1 <- aggte( MP = no_control, type = "dynamic", na.rm = TRUE)
 est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
+
+#Saving in the result table
+result_rais$att_nc[1] <- est_calsan_sc1$overall.att #ATT
+result_rais$att_nc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
+
+
+### 6.1.2 With Controls -----
+
+w_control <- did::att_gt(
+  yname = "rais_",
+  gname = "year_first_treated",
+  idname = "code_id",
+  tname = "ano",
+  data = data,
+  xformula = ~ ano_sexo + ano_branco + ano_ensino + code_id, 
+  control_group = "notyettreated",
+  base_period = "universal",
+  clustervars = "code_id"
+)
+
+est_calsan_sc1 <- aggte( MP = w_control, type = "dynamic", na.rm = TRUE)
+
+
+
+result_rais$att_fc[1] <- att_calsan
+result_rais$att_fc[2] <- paste0("[",round(att_se, digits = 4),"]")
+
+rm(w_control)
 
 # ---------------------------------------------------------------------------- #
 ## 6.2 CBO ----
@@ -803,6 +880,11 @@ est_calsan_sc1 <- aggte( MP = no_control, type = "dynamic", na.rm = TRUE)
 est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
+
+#Saving in the result table
+result_cbo$att_nc[1] <- est_calsan_sc1$overall.att #ATT
+result_cbo$att_nc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
+
 
 
 # ---------------------------------------------------------------------------- #
@@ -826,6 +908,11 @@ est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
 
+#Saving in the result table
+result_cnae$att_nc[1] <- est_calsan_sc1$overall.att #ATT
+result_cnae$att_nc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
+
+
 # ---------------------------------------------------------------------------- #
 ## 6.4 Blue Collar ----
 ### 6.4.1 RAIS BC ----
@@ -848,6 +935,11 @@ est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
 
+#Saving in the result table
+result_rais$att_bc[1] <- est_calsan_sc1$overall.att #ATT
+result_rais$att_bc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
+
+
 # ---------------------------------------------------------------------------- #
 ### 6.4.2 CBO BC ----
 
@@ -869,6 +961,11 @@ est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
 
+#Saving in the result table
+result_cbo$att_bc[1] <- est_calsan_sc1$overall.att #ATT
+result_cbo$att_bc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
+
+
 # ---------------------------------------------------------------------------- #
 ### 6.4.3 CNAE BC ----
 
@@ -889,6 +986,10 @@ est_calsan_sc1 <- aggte( MP = no_control, type = "dynamic", na.rm = TRUE)
 est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
+
+#Saving in the result table
+result_cnae$att_bc[1] <- est_calsan_sc1$overall.att #ATT
+result_cnae$att_bc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
 
 # ---------------------------------------------------------------------------- #
@@ -913,6 +1014,10 @@ est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
 
+#Saving in the result table
+result_rais$att_wc[1] <- est_calsan_sc1$overall.att #ATT
+result_rais$att_wc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
+
 
 # ---------------------------------------------------------------------------- #
 ### 6.5.2 CBO WC ----
@@ -935,6 +1040,11 @@ est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
 
+#Saving in the result table
+result_cbo$att_wc[1] <- est_calsan_sc1$overall.att #ATT
+result_cbo$att_wc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
+
+
 # ---------------------------------------------------------------------------- #
 ### 6.5.3 CNAE WC ----
 
@@ -955,6 +1065,11 @@ est_calsan_sc1 <- aggte( MP = no_control, type = "dynamic", na.rm = TRUE)
 est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
+
+#Saving in the result table
+result_cnae$att_wc[1] <- est_calsan_sc1$overall.att #ATT
+result_cnae$att_wc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
+
 
 # ---------------------------------------------------------------------------- #
 # 7. Pre-Avg ----
@@ -1017,6 +1132,9 @@ se_equal   # optional: the average SE (with sqrt)
 print(pre_av)
 print(se_equal)
 
+#Saving in the result table
+result_rais$att_fc[3] <- pre_av #ATT
+result_rais$att_fc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
 # ---------------------------------------------------------------------------- #
 ### 7.1.2 No Controls ----
@@ -1075,6 +1193,10 @@ se_equal   # optional: the average SE (with sqrt)
 print(pre_av)
 print(se_equal)
 
+#Saving in the result table
+result_rais$att_nc[3] <- pre_av #ATT
+result_rais$att_nc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
+
 # ---------------------------------------------------------------------------- #
 ## 7.2 CBO ----
 ### 7.2.1 With Controls -----
@@ -1128,9 +1250,12 @@ se_equal   # optional: the average SE (with sqrt)
 
 
 # Create LaTeX row string
-
 print(pre_av)
 print(se_equal)
+
+#Saving in the result table
+result_cbo$att_fc[3] <- pre_av #ATT
+result_cbo$att_fc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
 
 # ---------------------------------------------------------------------------- #
@@ -1187,6 +1312,10 @@ se_equal   # optional: the average SE (with sqrt)
 
 print(pre_av)
 print(se_equal)
+
+#Saving in the result table
+result_cbo$att_nc[3] <- pre_av #ATT
+result_cbo$att_nc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
 
 # ---------------------------------------------------------------------------- #
@@ -1248,6 +1377,10 @@ print(pre_av)
 print(se_equal)
 
 
+#Saving in the result table
+result_cnae$att_fc[3] <- pre_av #ATT
+result_cnae$att_fc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
+
 # ---------------------------------------------------------------------------- #
 ### 7.3.2 No Controls ----
 
@@ -1299,9 +1432,13 @@ se_equal   # optional: the average SE (with sqrt)
 
 
 # Create LaTeX row string
-
 print(pre_av)
 print(se_equal)
+
+#Saving in the result table
+result_cnae$att_nc[3] <- pre_av #ATT
+result_cnae$att_nc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
+
 
 # ---------------------------------------------------------------------------- #
 ## 7.4 Blue Collar ----
@@ -1360,6 +1497,10 @@ se_equal   # optional: the average SE (with sqrt)
 print(pre_av)
 print(se_equal)
 
+#Saving in the result table
+result_rais$att_bc[3] <- pre_av #ATT
+result_rais$att_bc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
+
 # ---------------------------------------------------------------------------- #
 ### 7.4.2 CBO ----
 
@@ -1416,6 +1557,11 @@ se_equal   # optional: the average SE (with sqrt)
 print(pre_av)
 print(se_equal)
 
+#Saving in the result table
+result_cbo$att_bc[3] <- pre_av #ATT
+result_cbo$att_bc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
+
+
 # ---------------------------------------------------------------------------- #
 ### 7.4.3 CNAE ----
 
@@ -1470,6 +1616,10 @@ se_equal   # optional: the average SE (with sqrt)
 
 print(pre_av)
 print(se_equal)
+
+#Saving in the result table
+result_cnae$att_bc[3] <- pre_av #ATT
+result_cnae$att_bc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
 
 # ---------------------------------------------------------------------------- #
@@ -1530,6 +1680,10 @@ print(pre_av)
 print(se_equal)
 
 
+#Saving in the result table
+result_rais$att_wc[3] <- pre_av #ATT
+result_rais$att_wc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
+
 
 ### 7.5.2 CBO -----
 pre_avg <- did::att_gt(
@@ -1583,6 +1737,9 @@ se_equal   # optional: the average SE (with sqrt)
 print(pre_av)
 print(se_equal)
 
+#Saving in the result table
+result_cbo$att_wc[3] <- pre_av #ATT
+result_cbo$att_wc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
 
 ### 7.5.3 CNAE ----
@@ -1636,5 +1793,49 @@ se_equal   # optional: the average SE (with sqrt)
 print(pre_av)
 print(se_equal)
 
+#Saving in the result table
+result_cnae$att_wc[3] <- pre_av #ATT
+result_cnae$att_wc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
 # ---------------------------------------------------------------------------- #
+# 8. Final Tables ----
+# ---------------------------------------------------------------------------- #
+
+loop <- c("rais","cbo","cnae")
+
+for (name in loop) {
+  
+  # Cria a tabela LaTeX
+  latex_table <- knitr::kable(
+    paste0("result_",name),
+    format = "latex",
+    booktabs = TRUE,
+    align = "lc",
+    linesep = ""
+  )
+  
+  writeLines(latex_table, paste0("C:/Users/tuffy/Documents/IC/Tables/",name,"_main.tex"))
+  
+  rm(latex_table, name)
+    
+}
+rm(loop)
+
+
+# ---------------------------------------------------------------------------- #
+# Total elapsed time
+
+final_time <- Sys.time()
+
+delta <- difftime(final_time, start_time, units = "secs")
+
+mins <- floor(as.numeric(delta) / 60)
+secs <- round(as.numeric(delta) %% 60)
+hours <- floor(as.numeric(mins)/ 60)
+
+
+message("---------------------------------------------")
+message("Total time elapsed: ", hours, " hours, ",mins," mins and ", secs, " s")
+message("---------------------------------------------")
+rm(list = ls())
+
