@@ -280,7 +280,7 @@ ggsave("C:/Users/tuffy/Documents/IC/Graphs/united/plot_rais2_v3.pdf", plot = p, 
 
 estimacoes_cbo <- plot(data,
                        plot_title = '',
-                       var_y = dummy_cbo)
+                       var_y = "dummy_cbo")
 
 
 p <- ggplot(estimacoes_cbo, aes(x = x, y = y, color = colour, group = group)) +
@@ -320,7 +320,7 @@ rm(p, att_calsan, att_se)
 
 estimacoes_cnae <- plot(data,
                         plot_title = '',
-                        var_y = dummy_cnae)
+                        var_y = "dummy_cnae")
 
 
 p <- ggplot(estimacoes_cnae, aes(x = x, y = y, color = colour, group = group)) +
