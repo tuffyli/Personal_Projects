@@ -23,6 +23,7 @@ library(didimputation)
 library(DIDmultiplegt)
 library(tidyr)
 
+setwd("C:/Users/tuffy/Documents/IC/")
 # ----------------------------------------------------------------------------- #
 # 1. DATA
 # ----------------------------------------------------------------------------- #
@@ -309,11 +310,9 @@ p <- ggplot(estimacoes_cbo, aes(x = x, y = y, color = colour, group = group)) +
 ggsave("Graphs/plot_cbo.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
 
 
-#Saving the Overall ATT in the results tables\
-result_cbo$att_fc[1] <- att_calsan
-result_cbo$att_fc[2] <- paste0("[",round(att_se, digits = 4),"]")
 
-rm(p, att_calsan, att_se)
+
+rm(p)
 
 # ---------------------------------------------------------------------------- #
 ## 2.4 CNAE ----
@@ -350,11 +349,9 @@ p <- ggplot(estimacoes_cnae, aes(x = x, y = y, color = colour, group = group)) +
 ggsave("Graphs/plot_cnae.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
 
 
-#Saving the Overall ATT in the results tables\
-result_cnae$att_fc[1] <- att_calsan
-result_cnae$att_fc[2] <- paste0("[",round(att_se, digits = 4),"]")
 
-rm(p, att_calsan, att_se)
+
+rm(p)
 
 gc()
 
