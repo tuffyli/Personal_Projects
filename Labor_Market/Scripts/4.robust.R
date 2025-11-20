@@ -2,7 +2,7 @@
 # Robustsness and Heterogeneity tests
 # Aditional tests
 # Last edited by: Tuffy Licciardi Issa
-# Date: 20/10/2025
+# Date: 20/11/2025
 # ---------------------------------------------------------------------------- #
 
 # ---------------------------------------------------------------------------- #
@@ -2089,6 +2089,7 @@ data_final <- data.frame()
 #WC
 for ( wc in c(1:5)) {
   
+  ini <- Sys.time()
   
   temp <- data_wc %>% 
     filter( cbo_first == wc)
@@ -2124,6 +2125,17 @@ for ( wc in c(1:5)) {
   
   rm(temp, calsan_did)
   
+  fim <- Sys.time()
+  
+  delta <- difftime(fim, ini, units = "secs")
+  mins <- floor(as.numeric(delta) / 60)
+  secs <- round(as.numeric(delta) %% 60)
+  
+  print("---------------------------------------------")
+  print(paste0("Total time elapsed: ",mins," mins e ", secs, " s"))
+  print("---------------------------------------------")
+  rm(delta, ini, fim, mins, secs)
+  
 }
 
 ### 10.2.2. Graph ----
@@ -2144,7 +2156,7 @@ data_final <- data_final %>%
 
 data_final$cbo <- as.factor(data_final$cbo)
 
-p <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = cbo)) +
+p_wc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = cbo)) +
   geom_point( size = 3) +
   geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.3) +
   geom_hline(yintercept = 0, color = "#D62728") +
@@ -2155,10 +2167,10 @@ p <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = cbo)
        '#0072B2', '#009E73'	, '#E69F00', "#CC79A7"),
     labels = c(
       #"Group 0",
-               "Group 1",
-               "Group 2",
-               "Group 3",
-               "Group 4"
+               "Public Power, Directors and Managers", #G1
+               "Professionals of the Sciences and of the Arts", #G2
+               "Mid-level Technicians", #G3
+               "Administrative Services Workers" #G4
                )
   ) +
   scale_shape_manual(
@@ -2167,10 +2179,10 @@ p <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = cbo)
       15, 17, 18, 16), # Circle, Square, Triangle, Diamond
     labels = c(
       #"Group 0",
-               "Group 1",
-               "Group 2",
-               "Group 3",
-               "Group 4"
+      "Public Power, Directors and Managers", #G1
+      "Professionals of the Sciences and of the Arts", #G2
+      "Mid-level Technicians", #G3
+      "Administrative Services Workers" #G4
     )
   ) +  
   labs(x = "Years to treatment", y = '', colour = '', shape = '') +
@@ -2195,11 +2207,11 @@ p <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = cbo)
   scale_y_continuous(limits = c(-0.95, 0.155),
                      breaks = c(-0.90,-0.75,-0.60,-0.45,-0.30,-0.15,0,0.15),
                      labels = c('-0.90','-0.75','-0.60','-0.45','-0.30','-0.15','0','0.15'))
-p
+p_wc
 
 
-ggsave("C:/Users/tuffy/Documents/IC/Graphs/united/WC_groups.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
-ggsave("C:/Users/tuffy/Documents/IC/Graphs/united/WC_groups.pdf", plot = p, device = "pdf", width = 10, height = 6, dpi = 300)
+ggsave("C:/Users/tuffy/Documents/IC/Graphs/united/WC_groups.jpeg", plot = p_wc, device = "jpeg", width = 10, height = 6, dpi = 600)
+ggsave("C:/Users/tuffy/Documents/IC/Graphs/united/WC_groups.pdf", plot = p_wc, device = "pdf", width = 10, height = 6, dpi = 300)
 
 ### 10.2.1 BC ----
 
@@ -2207,6 +2219,8 @@ data_final <- data.frame()
 
 #BC
 for ( wc in c(6,8,9,10)) {
+  
+  ini <- Sys.time()
   
   
   temp <- data_bc %>% 
@@ -2244,6 +2258,17 @@ for ( wc in c(6,8,9,10)) {
   
   rm(temp, calsan_did)
   
+  fim <- Sys.time()
+  
+  delta <- difftime(fim, ini, units = "secs")
+  mins <- floor(as.numeric(delta) / 60)
+  secs <- round(as.numeric(delta) %% 60)
+  
+  print("---------------------------------------------")
+  print(paste0("Total time elapsed: ",mins," mins e ", secs, " s"))
+  print("---------------------------------------------")
+  rm(delta, ini, fim, mins, secs)
+  
 }
 
 ### 10.2.2. Graph ----
@@ -2263,7 +2288,7 @@ data_final <- data_final %>%
 
 data_final$cbo <- as.factor(data_final$cbo)
 
-p <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = cbo)) +
+p_bc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = cbo)) +
   geom_point( size = 3) +
   geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.3) +
   geom_hline(yintercept = 0, color = "#D62728") +
@@ -2272,22 +2297,22 @@ p <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = cbo)
     values = c('black', '#0072B2', '#009E73'	, '#E69F00'
                #, "#CC79A7"
                ),
-    labels = c("Group 5",
+    labels = c("Service Workers, Shop Salespersons in Stores and Markets", #G5
                #"Group 7",
-               "Group 7",
-               "Group 8",
-               "Group 9"
+               "Production of Goods and Industrial Services", #G7
+               "Production of Goods and Industrial Services", #G8
+               "Repair and Maintance Services"   #G9
     )
   ) +
   scale_shape_manual(
     values = c(16, 15, 17, 18
                #, 16
                ), # Circle, square, triangle, diamond
-    labels = c("Group 5",
+    labels = c("Service Workers, Shop Salespersons in Stores and Markets", #G5
                #"Group 7",
-               "Group 7",
-               "Group 8",
-               "Group 9"
+               "Production of Goods and Industrial Services", #G7
+               "Production of Goods and Industrial Services", #G8
+               "Repair and Maintance Services"   #G9
     )
   ) +  
   labs(x = "Years to treatment", y = '', colour = '', shape = '') +
@@ -2312,12 +2337,29 @@ p <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = cbo)
   scale_y_continuous(limits = c(-0.95, 0.155),
                      breaks = c(-0.90,-0.75,-0.60,-0.45,-0.30,-0.15,0,0.15),
                      labels = c('-0.90','-0.75','-0.60','-0.45','-0.30','-0.15','0','0.15'))
-p
+p_bc
 
 
-ggsave("C:/Users/tuffy/Documents/IC/Graphs/united/BC_groups.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
-ggsave("C:/Users/tuffy/Documents/IC/Graphs/united/BC_groups.pdf", plot = p, device = "pdf", width = 10, height = 6, dpi = 300)
+ggsave("C:/Users/tuffy/Documents/IC/Graphs/united/BC_groups.jpeg", plot = p_bc, device = "jpeg", width = 10, height = 6, dpi = 600)
+ggsave("C:/Users/tuffy/Documents/IC/Graphs/united/BC_groups.pdf", plot = p_bc, device = "pdf", width = 10, height = 6, dpi = 300)
  
+
+# ---------------------------------------------------------------------------- #
+## 10.3 Combined plot ----
+# ---------------------------------------------------------------------------- #
+
+library(patchwork)
+
+grid_plot <- ( p_wc + p_bc) #Combined plot
+
+ggsave( #Saving image
+  filename = paste0("cbo_combined_robust.png"),
+  plot = grid_plot,
+  path = "C:/Users/tuffy/Documents/IC/Graphs/united/",
+  width = 1000/96, height = 620/96, dpi = 300
+)
+
+
 
 # ---------------------------------------------------------------------------- #
 # <<< CNAE >>> ----
