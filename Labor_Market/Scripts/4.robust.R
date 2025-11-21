@@ -2168,7 +2168,7 @@ p_wc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
     labels = c(
       #"Group 0",
                "Public Power, Directors and Managers", #G1
-               "Professionals of the Sciences and of the Arts", #G2
+               "Sciences and Arts", #G2
                "Mid-level Technicians", #G3
                "Administrative Services Workers" #G4
                )
@@ -2180,12 +2180,13 @@ p_wc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
     labels = c(
       #"Group 0",
       "Public Power, Directors and Managers", #G1
-      "Professionals of the Sciences and of the Arts", #G2
+      "Sciences and Arts", #G2
       "Mid-level Technicians", #G3
       "Administrative Services Workers" #G4
     )
   ) +  
-  labs(x = "Years to treatment", y = '', colour = '', shape = '') +
+  labs(title = "White-collars",
+    x = "Years to treatment", y = '', colour = '', shape = '') +
   theme_classic(base_size = 18) +   
   theme(
     axis.line = element_line(),
@@ -2197,7 +2198,7 @@ p_wc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
     axis.text.y = element_text(size = 18
     ),
     
-    legend.text = element_text(size = 18),
+    legend.text = element_text(size = 11),
     legend.position = c(0.05, 0.05),         
     legend.justification = c(0, 0)           
   ) +
@@ -2297,10 +2298,10 @@ p_bc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
     values = c('black', '#0072B2', '#009E73'	, '#E69F00'
                #, "#CC79A7"
                ),
-    labels = c("Service Workers, Shop Salespersons in Stores and Markets", #G5
+    labels = c("Service Workers, Shop Salespersons", #G5
                #"Group 7",
-               "Production of Goods and Industrial Services", #G7
-               "Production of Goods and Industrial Services", #G8
+               "Production and Industrial Services", #G7
+               "Production and Industrial Services", #G8
                "Repair and Maintance Services"   #G9
     )
   ) +
@@ -2308,14 +2309,15 @@ p_bc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
     values = c(16, 15, 17, 18
                #, 16
                ), # Circle, square, triangle, diamond
-    labels = c("Service Workers, Shop Salespersons in Stores and Markets", #G5
+    labels = c("Service Workers, Shop Salespersons", #G5
                #"Group 7",
-               "Production of Goods and Industrial Services", #G7
-               "Production of Goods and Industrial Services", #G8
+               "Production and Industrial Services", #G7
+               "Production and Industrial Services", #G8
                "Repair and Maintance Services"   #G9
     )
   ) +  
-  labs(x = "Years to treatment", y = '', colour = '', shape = '') +
+  labs(title = "Blue-collars",
+    x = "Years to treatment", y = '', colour = '', shape = '') +
   theme_classic(base_size = 18) +   
   theme(
     axis.line = element_line(),
@@ -2327,7 +2329,7 @@ p_bc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
     axis.text.y = element_text(size = 18
     ),
     
-    legend.text = element_text(size = 18),
+    legend.text = element_text(size = 11),
     legend.position = c(0.05, 0.05),         
     legend.justification = c(0, 0)           
   ) +
@@ -2356,7 +2358,7 @@ ggsave( #Saving image
   filename = paste0("cbo_combined_robust.png"),
   plot = grid_plot,
   path = "C:/Users/tuffy/Documents/IC/Graphs/united/",
-  width = 1000/96, height = 620/96, dpi = 300
+  width = 1500/96, height = 620/96, dpi = 300
 )
 
 
