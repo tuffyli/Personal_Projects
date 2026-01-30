@@ -2,7 +2,7 @@
 # Data Organization
 # DataBase adjustment
 # Last edited by: Tuffy Licciardi Issa
-# Date: 18/10/2025
+# Date: 30/01/2025
 # ---------------------------------------------------------------------------- #
 
 # ---------------------------------------------------------------------------- #
@@ -53,7 +53,7 @@ base <- base %>%
 #Sample
 print(nrow(base)/nrow(temp))
 
-##1.2 Fixed Effects and controls #####
+##1.2 Fixed Effects and controls ----
 base$ano_mun <- as.numeric(interaction(base$ano, base$cod_municipio))
                            
 base <- base %>%
@@ -335,8 +335,40 @@ base <- base %>%
             ) %>% 
   arrange(code_id, ano) 
 
+# --------------------------------------------------------------------------- #
+## 2.4 Mun -----
+# --------------------------------------------------------------------------- #
+
+#Here I will compare the first non-missing value with the remaining obs in the data
+base <- base %>% 
+  group_by(code_id) %>% 
+  mutate(
+    aux1 = which(is.na(cod_mun_rais_) & ano < year_first_treated)[1],
+    aux2 = which(!is.na(cod_mun_rais_) & ano < year_first_treated)[1]
+    
+  ) %>% 
+  arrange( code_id, ano) %>% 
+  select(-X) %>%
+  ungroup()
+
+
+
+base <- base %>%
+  group_by(code_id) %>% 
+  
+  mutate(
+    mun_first = cod_mun_rais_[row_number() == aux2],
+    
+    simple_mun_dummy = ifelse(!is.na(cod_mun_rais_) & cod_mun_rais_ != mun_first, 
+                              1, 0)
+  ) 
+
+
+  base <- base %>% ungroup() %>% 
+  select(-mun_first, -aux1, -aux2)
+
 # --------------- #
-##2.4 Collars ----
+##2.5 Collars ----
 # --------------- #
 #Separating individuals by collar type
 base <- base %>% 
@@ -367,8 +399,9 @@ base$branco_dummy <- as.numeric(base$branco_dummy)
 base$ensino_dummy <- as.numeric(base$ensino_dummy)
 base$white_dummy <- as.numeric(base$white_dummy)
 
-
-## 2.5 Descriptive Statistics ----
+# ---------------------------------------------------------------------------- #
+## 2.6 Descriptive Statistics ----
+# ---------------------------------------------------------------------------- #
 stargazer(base[, c("sexo_dummy", "branco_dummy", "ensino_dummy", "white_dummy")], 
           type = "text",          
           title = "Descrição das variáveis",
