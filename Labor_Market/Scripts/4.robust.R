@@ -1779,6 +1779,44 @@ ggsave("C:/Users/tuffy/Documents/IC/Graphs/plot_test5_cnae.jpeg", plot = plot_ca
 
 rm(treat)
 
+# ---------------------------------------------------------------------------- #
+# mun ====
+# ----------------------------------------------------------------------------#
+
+
+# ------------------------- #
+## 6.2 D2 Estimation ----
+# ------------------------- #
+
+calsan_did <- did::att_gt(
+  yname = "simple_mun_dummy",
+  gname = "year_first_treated",
+  idname = "code_id",
+  tname = "ano",
+  xformla = ~ ano_sexo + ano_ensino + code_id #+ all_in_rais + white_dummy
+  ,
+  data = data,
+  control_group = "notyettreated",
+  base_period = "universal",
+  clustervars = "code_id"
+)
+
+est_calsan <- aggte( MP = calsan_did, type = "dynamic", na.rm = TRUE)
+#Result table
+print(est_calsan)
+
+plot_calsan <- ggdid(est_calsan) +
+  ggtitle("Event Study: Mun - Mudança Mun ") +
+  labs("Time to treat") +
+  theme_minimal()
+
+plot_calsan
+ggsave("C:/Users/tuffy/Documents/IC/Graphs/plot_test1_mun.jpeg", plot = plot_calsan, device = "jpeg", width = 10, height = 6, dpi = 600)
+
+
+
+
+
 
 #------------------------------------------------------------------------------#
 # 7. Honest DID ----
