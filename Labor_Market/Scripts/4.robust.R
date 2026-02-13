@@ -2223,7 +2223,7 @@ p_wc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
       "Administrative Services Workers" #G4
     )
   ) +  
-  labs(title = "White-collars",
+  labs(#title = "White-collars",
     x = "Years to treatment", y = '', colour = '', shape = '') +
   theme_classic(base_size = 18) +   
   theme(
@@ -2236,7 +2236,7 @@ p_wc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
     axis.text.y = element_text(size = 18
     ),
     
-    legend.text = element_text(size = 11),
+    legend.text = element_text(size = 18),
     legend.position = c(0.05, 0.05),         
     legend.justification = c(0, 0)           
   ) +
@@ -2354,7 +2354,7 @@ p_bc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
                "Repair and Maintance Services"   #G9
     )
   ) +  
-  labs(title = "Blue-collars",
+  labs(#title = "Blue-collars",
     x = "Years to treatment", y = '', colour = '', shape = '') +
   theme_classic(base_size = 18) +   
   theme(
@@ -2363,11 +2363,11 @@ p_bc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
     axis.ticks = element_line(colour = "black"),  
     axis.ticks.x = element_line(colour = "black"),
     axis.ticks.y = element_line(colour = "black"),
-    axis.text.x = element_text(margin = margin(t = 5), size = 18),
-    axis.text.y = element_text(size = 18
+    axis.text.x = element_text(margin = margin(t = 5), size = 20),
+    axis.text.y = element_text(size = 20
     ),
     
-    legend.text = element_text(size = 11),
+    legend.text = element_text(size = 18),
     legend.position = c(0.05, 0.05),         
     legend.justification = c(0, 0)           
   ) +
@@ -2396,7 +2396,7 @@ ggsave( #Saving image
   filename = paste0("cbo_combined_robust.png"),
   plot = grid_plot,
   path = "C:/Users/tuffy/Documents/IC/Graphs/united/",
-  width = 1500/96, height = 620/96, dpi = 300
+  width = 1500/96, height = 720/96, dpi = 600
 )
 
 
