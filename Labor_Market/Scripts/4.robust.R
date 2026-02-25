@@ -2097,7 +2097,9 @@ data <- data %>%
     cbo_first = cbo_group[row_number() == aux2]
 )
 
+# ---------------------------------------------------------------------------- #
 ## 10.1 Data Frames ----
+# ---------------------------------------------------------------------------- #
 
 #Note that WC = White-Collar and BC = Blue-Collar
 
@@ -2109,7 +2111,9 @@ data_wc <- data %>%
 summary(data_wc$cbo_group)
 summary(data_wc$cbo_first)
 
+# ---------------------------------------------------------------------------- #
 ### 10.1.2 BC ------
+# ---------------------------------------------------------------------------- #
 
 data_bc <- data %>% 
   filter(white_dummy == 0 &
@@ -2118,10 +2122,10 @@ data_bc <- data %>%
 summary(data_bc$cbo_group)
 summary(data_bc$cbo_first)
 
-
+# ---------------------------------------------------------------------------- #
 ## 10.2 Estimation ----
 ### 10.2.1 WC ----
-
+# ---------------------------------------------------------------------------- #
 data_final <- data.frame()
 
 #WC
@@ -2176,13 +2180,14 @@ for ( wc in c(1:5)) {
   
 }
 
+# ---------------------------------------------------------------------------- #
 ### 10.2.2. Graph ----
-
+# ---------------------------------------------------------------------------- #
 
 data_final <- data_final %>% 
   mutate(
     x = as.numeric(x),
-    x = case_when(
+    x = case_when( #Spacing each obervation
       cbo == 1 ~ x - 0.25,
       cbo == 2 ~ x - 0.15,
       cbo == 4 ~ x + 0.15,
@@ -2225,22 +2230,22 @@ p_wc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
   ) +  
   labs(#title = "White-collars",
     x = "Years to treatment", y = '', colour = '', shape = '') +
-  theme_classic(base_size = 18) +   
+  theme_classic(base_size = 15) +   
   theme(
     axis.line = element_line(),
     axis.ticks.length = unit(5, "pt"),
     axis.ticks = element_line(colour = "black"),  
     axis.ticks.x = element_line(colour = "black"),
     axis.ticks.y = element_line(colour = "black"),
-    axis.text.x = element_text(margin = margin(t = 5), size = 18),
-    axis.text.y = element_text(size = 18
+    axis.text.x = element_text(margin = margin(t = 5), size = 15),
+    axis.text.y = element_text(size = 15
     ),
     
-    legend.text = element_text(size = 18),
-    legend.position = c(0.05, 0.05),         
+    legend.text = element_text(size = 15),
+    legend.position = c(0.01, 0.05),         
     legend.justification = c(0, 0)           
   ) +
-  scale_x_continuous(limits = c(-9.5, 4.5),
+  scale_x_continuous(limits = c(-9.5, 5),
                      breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4),
                      labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4')) +
   scale_y_continuous(limits = c(-0.95, 0.155),
@@ -2310,8 +2315,9 @@ for ( wc in c(6,8,9,10)) {
   
 }
 
+# ---------------------------------------------------------------------------- #
 ### 10.2.2. Graph ----
-
+# ---------------------------------------------------------------------------- #
 
 data_final <- data_final %>% 
   mutate(
@@ -2356,22 +2362,22 @@ p_bc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
   ) +  
   labs(#title = "Blue-collars",
     x = "Years to treatment", y = '', colour = '', shape = '') +
-  theme_classic(base_size = 18) +   
+  theme_classic(base_size = 15) +   
   theme(
     axis.line = element_line(),
     axis.ticks.length = unit(5, "pt"),
     axis.ticks = element_line(colour = "black"),  
     axis.ticks.x = element_line(colour = "black"),
     axis.ticks.y = element_line(colour = "black"),
-    axis.text.x = element_text(margin = margin(t = 5), size = 20),
-    axis.text.y = element_text(size = 20
+    axis.text.x = element_text(margin = margin(t = 5), size = 15),
+    axis.text.y = element_text(size = 15
     ),
     
-    legend.text = element_text(size = 18),
-    legend.position = c(0.05, 0.05),         
+    legend.text = element_text(size = 15),
+    legend.position = c(0.01, 0.05),         
     legend.justification = c(0, 0)           
   ) +
-  scale_x_continuous(limits = c(-9.5, 4.5),
+  scale_x_continuous(limits = c(-9.5, 5),
                      breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4),
                      labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4')) +
   scale_y_continuous(limits = c(-0.95, 0.155),
@@ -2396,7 +2402,7 @@ ggsave( #Saving image
   filename = paste0("cbo_combined_robust.png"),
   plot = grid_plot,
   path = "C:/Users/tuffy/Documents/IC/Graphs/united/",
-  width = 1500/96, height = 720/96, dpi = 600
+  width = 1300/96, height = 565/96, dpi = 600
 )
 
 
