@@ -16,10 +16,11 @@ lang: "pt-BR"
 ---
 
 
-> This document is a minimal, reproducible sample of my empirical workflow  
-> Full code and additional projects: **[github.com/tuffyli](https://github.com/tuffyli)**
+> This document presents a minimal and reproducible example of my empirical research workflow.
+  
+> Full code and additional projects are available at:  **[github.com/tuffyli](https://github.com/tuffyli)**
 
-```{r setup, include=FALSE}
+```{r setup, message=FALSE, warning=FALSE}
 set.seed(123)
 
 # Load packages
@@ -27,36 +28,58 @@ library(dplyr);library(here);library(tidyverse);library(stargazer);library(Match
 
 ```
 
-# Objectives
+## Objective
 
-The main objective of this sample work is to explore the expansion of Brazil’s alimony rights to women in stable unions and its effects on education, particularly among young women who became newly entitled to this right.  
-This analysis is inspired by Rangel’s (2006) seminal work on the policy’s expansion. The main difference in this study is the application of an additional Propensity Score Matching (PSM) method, with a particular focus on young mothers and their educational decisions.
+The objective of this sample is to illustrate an empirical workflow using Brazilian household survey data. I analyze the expansion of alimony rights to women in stable unions and its potential effects on educational attainment among young women.
 
-# Data
+This policy reform extended alimony eligibility to women in non-civil unions (such as consensual or religious-only unions). The analysis investigates whether this change affected the educational decisions of young women who became newly entitled to this right.
 
-In the **[repository](https://github.com/Tuffyli/Personal_Projects/tree/main/PNAD-exercise)**, I include supplementary code detailing the selection of key variables.  
-Due to the large size of the PNAD dataset, it is not possible to make the full data publicly available. Therefore, I provide a filtered version of the dataset containing only the variables relevant to the analysis.
+The empirical framework is inspired by Rangel (2006). The main contribution of this exercise is the implementation of an additional Propensity Score Matching (PSM) approach to improve comparability between treated and control individuals.
 
-```{r}
+## Data
+
+The analysis uses microdata from Brazil’s PNAD household survey.
+
+The sample includes women aged 15–24 observed between 1992 and 1995.
+
+Treated individuals are women in non-civil unions (consensual or religious-only) who are household heads or spouses. The control group consists of otherwise similar women in legally recognized civil unions (civil or civil + religious).
+
+Due to the large size of the original PNAD dataset, the full dataset cannot be distributed. The repository therefore includes a filtered dataset containing only the variables required for the empirical analysis. At **[repository](https://github.com/Tuffyli/Personal_Projects/tree/main/PNAD-exercise)**, I include supplementary code detailing the selection of key variables.  
+
+Key variables include:
+
+- age  
+- race/color  
+- education  
+- household per capita income  
+- number of children  
+- labor market participation  
+- state of residence
+
+```{r data, message=FALSE, warning=FALSE}
 # ------------------- #
 # 1. Data Extraction ----
 
-data <- readRDS("C:/Users/tuffy/Documents/Trabalhos/Ava_Pol/Bases/final_filtered_9295.rds")
+library(here)
 
-#1.1 Summary ----
-#' In the data manipulation code I created a summary table. Here I present it
+data <- readRDS(here("Ava_Pol","data", "final_filtered_9295.rds"))
 
-summary <- readRDS("C:/Users/tuffy/Documents/Trabalhos/Ava_Pol/Bases/summary.rds")
-print(summary)
-
-rm(summary)
+# 1.1 Summary ----
+# In the data manipulation code I created a summary table. Here I present it
+summary_tbl <- readRDS(here("Ava_Pol", "data", "summary.rds"))
+print(summary_tbl)
 ```
 
-Treated individuals are women aged 15–24 in non-civil unions (consensual or religious-only) who are household heads or spouses; controls are otherwise similar women in legally recognized unions (civil or civil + religious).
 
 # Propensity Score Matching
 
-In this next step I will execute the propensity score matching between treated and control females.
+## Propensity Score Matching
+
+To improve comparability between treated and control individuals, I estimate propensity scores using observable characteristics including age, race, geographic location, household income, and number of children.
+
+Matching is implemented using nearest-neighbour matching with replacement and a caliper of 0.05.
+
+Balance diagnostics are evaluated using standardized mean differences and visualized through love plots. This step allows us to assess whether matching successfully reduces covariate imbalance between treated and control groups before estimating treatment effects.
 
 ```{r PSM, warning=FALSE, fig.width=6, fig.height=6, fig.align='center'}
 # -------------------------------------------------------------------
@@ -68,11 +91,21 @@ for (year in c(1992, 1993, 1995)) {
   df_psm <- data %>% 
     filter(ano == year) %>% 
     select(
-      treatment, uf, age, cor, anos_estudo, peso_pessoa,
-      ultima_serie_concluida, tipo_curso_frequenta, grupo_cbo,
-      trabalhou_ultimo_ano, renda_dom_per_capita,
-      dummy_filhos_homens_dom, dummy_filhos_mulheres_dom,
-      pensao_dummy, total_filhos
+      treatment,                  #Treatment indicator (1 = treated, 0 = control)
+      uf,                         #State of residence
+      age,                        #Age
+      cor,                        #Color/Race
+      anos_estudo,                #Years of education
+      peso_pessoa,                #Observation weight
+      ultima_serie_concluida,     #Last completed grade
+      tipo_curso_frequenta,       #Type of course attended
+      grupo_cbo,                  #Occupational group
+      trabalhou_ultimo_ano,       #Worked in the last 12 months
+      renda_dom_per_capita,       #Household per capita income
+      dummy_filhos_homens_dom,    #Children Dummy for living with Father
+      dummy_filhos_mulheres_dom,  #Children Dummy for living with Mother
+      pensao_dummy,               #Pension dummy
+      total_filhos                #Total children
     ) %>% 
     mutate(uf = as.factor(uf)) %>% 
     filter(
@@ -162,9 +195,20 @@ rm(bottom, top, combined, match_model, plots)
 ```
 
 
-# Regression
+## Regression
 
-To assess treatment effects, we fit progressively richer models (no FE, UF×year FE, and FE + controls) using the matched sample.
+To estimate treatment effects, I fit progressively richer regression specifications using the matched sample.
+
+The outcome variable is years of education.
+
+Three specifications are estimated:
+
+1. Baseline model without fixed effects.
+2. Model including state-by-year fixed effects to control for geographic shocks.
+3. Model including fixed effects and additional individual controls.
+
+All regressions are estimated using matching weights and heteroskedasticity-robust standard errors.
+
 
 ```{r}
 # ---------------------------------------------------------------------------- #
@@ -204,10 +248,9 @@ rm(df_matched_1992, df_matched_1993, df_matched_1995, matched_data)
 
 
 ```{r Output, results='asis'}
-fixest::etable(
-  tex = T,
-  list("No FE" = model_nc, "UF×Year FE" = model_fe, "FE + Controls" = model_cc),
-  drop     = "Constant",
+tab <- fixest::etable(
+  model_nc, model_fe, model_cc,            # pass models directly
+  drop      = "Constant",
   dict = c(
     "anos_estudo"                    = "Years of education",
     "treatment$"                     = "Treatment (1992)",
@@ -220,13 +263,28 @@ fixest::etable(
     "treatment x ano = 1995"         = "Treatment × 1995"
   ),
   se.below   = TRUE,
-  signif.code = "letters",     
+  signif.code = "letters",
   digits     = 3,
   fitstat    = c("n","r2","rmse"),
   title      = "ATT by Year (ref = 1992)",
   notes      = "SEs are heteroskedastic-robust. Weights from matching sample."
+  # <- DO NOT set tex=TRUE here (default is HTML/markdown-friendly)
 )
 
+knitr::kable(tab, format = "latex", escape = FALSE) |>
+  kableExtra::kable_styling(full_width = FALSE)
 ```
 
-There is no statistically significant effect of alimony eligibility on the years of education among young women. However, the low R² values indicate limited explanatory power, these specifications explain only a small share of the variation in schooling outcomes, so the results should be interpreted with caution. 
+Across all specifications, the estimated treatment effects are not statistically significant.
+
+This suggests that the expansion of alimony eligibility did not produce measurable changes in educational attainment among young women in this sample.
+
+However, the relatively low explanatory power of the models indicates that much of the variation in educational outcomes remains unexplained. These results should therefore be interpreted cautiously.
+
+## Reproducibility
+
+The full empirical project, including data preparation, matching procedures, and regression code, is available in the repository:
+
+github.com/tuffyli
+
+The repository contains the complete scripts and documentation required to replicate the analysis.
