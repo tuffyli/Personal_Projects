@@ -2,7 +2,7 @@
 # RMSP and TRT2 Maps
 # 
 # Last edited by: Tuffy Licciardi Issa
-# Date: 06/04/2026
+# Date: 24/04/2026
 # ---------------------------------------------------------------------------- #
 
 # Load packages used to download, manipulate, and plot spatial data
@@ -71,6 +71,69 @@ ggplot() +
   geom_sf(data = filter(mun, trt2 == 1), fill = "blue", color = "black") +
   theme_minimal() +
   labs(title = "Municípios do TRT-2")
+
+# ---------------------------------------------------------------------------- #
+# AER STyle full SP ----
+# ---------------------------------------------------------------------------- #
+
+
+mun_4326 <- st_transform(mun, 4326)
+bb <- st_bbox(mun_4326)
+
+theme_aer_map <- function() {
+  theme_minimal(base_size = 11) +
+    theme(
+      panel.grid.major = element_line(color = "grey90", linewidth = 0.15),
+      panel.grid.minor = element_blank(),
+      axis.title = element_blank(),
+      axis.text.x = element_text(size = 9, color = "grey20"),
+      axis.text.y = element_text(size = 9, color = "grey20"),
+      axis.ticks = element_line(color = "grey70", linewidth = 0.2),
+      plot.title = element_text(hjust = 0.5, size = 12),
+      plot.margin = margin(10, 10, 10, 10)
+    )
+}
+
+x_breaks <- seq(floor(bb["xmin"]), ceiling(bb["xmax"]), by = 2)
+y_breaks <- seq(floor(bb["ymin"]), ceiling(bb["ymax"]), by = 1)
+
+# TRT-2
+trt_plot <- ggplot() +
+  geom_sf(
+    data = mun_4326,
+    fill = "grey92",
+    color = "white",
+    linewidth = 0.005
+  ) +
+  geom_sf(
+    data = filter(mun_4326, trt2 == 1),
+    fill = "grey35",
+    color = "black",
+    linewidth = 0.2
+  ) +
+  coord_sf(
+    xlim = c(bb["xmin"], bb["xmax"]),
+    ylim = c(bb["ymin"], bb["ymax"]),
+    expand = FALSE
+  ) +
+  scale_x_continuous(
+    breaks = x_breaks,
+    labels = function(x) paste0(abs(x), "°W")
+  ) +
+  scale_y_continuous(
+    breaks = y_breaks,
+    labels = function(y) paste0(abs(y), "°S")
+  ) +
+  labs(title = "Municípios do TRT-2") +
+  theme_aer_map()
+
+ggsave(
+  filename = "C:/Users/tuffy/Documents/IC/Graphs/map_trt2.pdf",
+  plot = trt_plot,
+  width = 7,
+  height = 5,
+  device = cairo_pdf
+)
 
 # ---------------------------------------------------------------------------- #
 # AER-style zoomed map ----
