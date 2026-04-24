@@ -124,7 +124,6 @@ trt_plot <- ggplot() +
     breaks = y_breaks,
     labels = function(y) paste0(abs(y), "°S")
   ) +
-  labs(title = "Municípios do TRT-2") +
   theme_aer_map()
 
 ggsave(
