@@ -2,7 +2,7 @@
 # Overall Working Paper Code
 # Main regression and results
 # Last edited by: Tuffy Licciardi Issa
-# Date: 09/11/2025
+# Date: 25/04/2026
 # ---------------------------------------------------------------------------- #
 
 # ---------------------------------------------------------------------------- #
@@ -36,7 +36,7 @@ data <- read.csv("C:/Users/tuffy/Documents/IC/Bases/base_atual_dum_v3.csv")
 #1.1 Result Tables ----
 # ----------------------- #
 
-
+rows <- c("ATT", " ", "Pre-Avg"," ", "Observations")
 #' The first step is to create a result dataframe, where the values will be stored.
 #' Throughout the code I will be filling the slots to create the final result table
 #' for each explored category.
@@ -65,8 +65,19 @@ result_cnae <- data.frame(
   att_wc = rep(NA, times = length(c("ATT", " ","Pre-Avg"," ")))   #FC White-Collar
 )
 
+result_sal <- data.frame(
+  names = rows,
+  att_nc = rep(NA, times = length(rows)),  #No controls
+  att_fc = rep(NA, times = length(rows)),  #Full controls
+  att_bc = rep(NA, times = length(rows)),  #FC Blue-Collar
+  att_wc = rep(NA, times = length(rows))   #FC White-Colla
+  )
+
+rm(rows)
+# ---------------------------------------------------------------------------- #
 # 2. Main Graphs ----
 ## 2.1 Function ----
+# ---------------------------------------------------------------------------- #
 plot <- function(df,
                  plot_title,
                  var_y,
@@ -75,9 +86,9 @@ plot <- function(df,
   
   ini <- Sys.time()
   
-  print(paste0("Calculando para:", var_y," :)"))
-  
   var_y <- as.character(substitute(var_y))
+  message("Calculando para:", var_y," :)")
+  
   
   # Equações com contorles
   sunab_formula <- as.formula(
@@ -119,7 +130,6 @@ plot <- function(df,
   
   plot_calsan <- ggdid(est_calsan) +
     ggtitle("Event Study: Callaway & Sant'anna, IGNORAR ") +
-    labs("Tempo até o tratamento") +
     theme_minimal()
   
   ##Extraindo os coeficientes##
@@ -128,7 +138,7 @@ plot <- function(df,
   
   data_sunab <- plot_sunab[[1]] 
   data_sunab <- data_sunab %>% 
-    mutate(colour = ifelse(id == 1, '#f7200a')) %>% 
+    mutate(colour = ifelse(id == 1, '#f7200a', NA)) %>% 
     rename(
       ymin = ci_low,
       ymax = ci_high,  
@@ -291,13 +301,17 @@ p <- ggplot(estimacoes_cbo, aes(x = x, y = y, color = colour, group = group)) +
   geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
   scale_color_manual(values=c('black','red'),labels=c("Callaway & Sant'anna","Sun & Abraham")) +
   labs(x = "Years to treatment", y = '', colour = '') +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 18) +
   theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    axis.line.x = element_line(),
-    axis.line.y = element_line(),
-    legend.position = "bottom"
+    axis.line = element_line(),
+    axis.ticks.length = unit(5, "pt"),
+    axis.ticks = element_line(colour = "black"),  
+    axis.ticks.x = element_line(colour = "black"),
+    axis.ticks.y = element_line(colour = "black"),
+    axis.text.x = element_text(margin = margin(t = 5), size = 18),
+    legend.position = "none",
+    
+    axis.text.y = element_text(size = 18)
   ) +
   scale_x_continuous(limits = c(-9.2, 5.2),
                      breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
@@ -329,13 +343,17 @@ p <- ggplot(estimacoes_cnae, aes(x = x, y = y, color = colour, group = group)) +
   geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
   scale_color_manual(values=c('black','red'),labels=c("Callaway & Sant'anna","Sun & Abraham")) +
   labs(x = "Years to treatment", y = '', colour = '') +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 18) +
   theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    axis.line.x = element_line(),
-    axis.line.y = element_line(),
-    legend.position = "bottom"
+    axis.line = element_line(),
+    axis.ticks.length = unit(5, "pt"),
+    axis.ticks = element_line(colour = "black"),  
+    axis.ticks.x = element_line(colour = "black"),
+    axis.ticks.y = element_line(colour = "black"),
+    axis.text.x = element_text(margin = margin(t = 5), size = 18),
+    legend.position = "none",
+    
+    axis.text.y = element_text(size = 18)
   ) +
   scale_x_continuous(limits = c(-9.2, 5.2),
                      breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
@@ -352,8 +370,62 @@ ggsave("Graphs/plot_cnae.jpeg", plot = p, device = "jpeg", width = 10, height = 
 
 
 rm(p)
-
 gc()
+# ---------------------------------------------------------------------------- #
+## 2.5 Salary -----
+# ---------------------------------------------------------------------------- #
+
+estimacoes_sal <- plot(data %>% 
+                         group_by(code_id) %>%
+                         filter(all(cnae_group[ano < year_first_treated] ==
+                                      cnae_pre_treat[ano < year_first_treated]),
+                                all_in_rais == 1) %>%
+                         ungroup(),
+                        plot_title = '',
+                        var_y = "remuneracao_media_sm_")
+
+
+p <- ggplot(estimacoes_sal %>% #Only Callaway
+              filter(group == 2) %>% 
+              mutate(x = x - 0.2),
+            aes(x = x, y = y, color = colour, group = group)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.5) +
+  geom_hline(yintercept = 0, color = "#D62728") +
+  geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
+  scale_color_manual(values='black',labels="Callaway & Sant'anna") +
+  labs(x = "Years to treatment", y = '', colour = '') +
+  theme_classic(base_size = 18) +   
+  theme(
+    axis.line = element_line(),
+    axis.ticks.length = unit(5, "pt"),
+    axis.ticks = element_line(colour = "black"),  
+    axis.ticks.x = element_line(colour = "black"),
+    axis.ticks.y = element_line(colour = "black"),
+    axis.text.x = element_text(margin = margin(t = 5), size = 18),
+    legend.position = "none",
+    
+    axis.text.y = element_text(size = 18)
+  ) +
+  scale_x_continuous(
+    limits = c(-9.5, 4.5),
+    breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4),
+    labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4'),
+    minor_breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4)  
+  ) +
+  scale_y_continuous(
+    limits = c(-0.6, 0.45),
+    breaks = seq(-0.6, 0.45, by = 0.15),
+    labels = sprintf("%.2f", seq(-0.6, 0.45, by = 0.15))
+  )
+
+p
+
+ggsave("Graphs/final/plot_sal.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
+
+
+
+
 
 # ---------------------------------------------------------------------------- #
 # 3. White vs. Blue ----
@@ -374,68 +446,68 @@ estimacoes_brais <- plot(blue_data,
                          plot_title = '',
                          var_y = "rais_")
 
-
-p <- ggplot(estimacoes_brais, aes(x = x, y = y, color = colour, group = group)) +
-  geom_point(size = 3) +
-  geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.2) +
-  geom_hline(yintercept = 0, color = "#D62728") +
-  geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
-  scale_color_manual(values=c('black','red'),labels=c("Callaway & Sant'anna","Sun & Abraham")) +
-  labs(x = "Years to treatment", y = '', colour = '') +
-  theme_minimal(base_size = 14) +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    axis.line.x = element_line(),
-    axis.line.y = element_line(),
-    legend.position = "bottom"
-  ) +
-  scale_x_continuous(limits = c(-9.2, 5.2),
-                     breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
-                     labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4','+5')) +
-  scale_y_continuous(limits = c(-0.95, 0.155),
-                     breaks = c(-0.90,-0.75,-0.60,-0.45,-0.30,-0.15,0,0.15),
-                     labels = c('-0.90','-0.75','-0.60','-0.45','-0.30','-0.15','0','0.15'))
-
-
-
-p
-
-ggsave("Graphs/plot_rais_bluecol.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
-
+# 
+# p <- ggplot(estimacoes_brais, aes(x = x, y = y, color = colour, group = group)) +
+#   geom_point(size = 3) +
+#   geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.2) +
+#   geom_hline(yintercept = 0, color = "#D62728") +
+#   geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
+#   scale_color_manual(values=c('black','red'),labels=c("Callaway & Sant'anna","Sun & Abraham")) +
+#   labs(x = "Years to treatment", y = '', colour = '') +
+#   theme_minimal(base_size = 14) +
+#   theme(
+#     panel.grid.major = element_blank(),
+#     panel.grid.minor = element_blank(),
+#     axis.line.x = element_line(),
+#     axis.line.y = element_line(),
+#     legend.position = "bottom"
+#   ) +
+#   scale_x_continuous(limits = c(-9.2, 5.2),
+#                      breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
+#                      labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4','+5')) +
+#   scale_y_continuous(limits = c(-0.95, 0.155),
+#                      breaks = c(-0.90,-0.75,-0.60,-0.45,-0.30,-0.15,0,0.15),
+#                      labels = c('-0.90','-0.75','-0.60','-0.45','-0.30','-0.15','0','0.15'))
+# 
+# 
+# 
+# p
+# 
+# ggsave("Graphs/plot_rais_bluecol.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
+# 
 
 # ---------------------------------------------------------------------------- #
 ### 3.2.2 CBO ----
 estimacoes_bcbo <- plot(blue_data,
                         plot_title = '',
                         var_y = "dummy_cbo")
-
-
-p <- ggplot(estimacoes_bcbo, aes(x = x, y = y, color = colour, group = group)) +
-  geom_point(size = 3) +
-  geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.2) +
-  geom_hline(yintercept = 0, color = "#D62728") +
-  geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
-  scale_color_manual(values=c('black','red'),labels=c("Callaway & Sant'anna","Sun & Abraham")) +
-  labs(x = "Years to treatment", y = '', colour = '') +
-  theme_minimal(base_size = 14) +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    axis.line.x = element_line(),
-    axis.line.y = element_line(),
-    legend.position = "bottom"
-  ) +
-  scale_x_continuous(limits = c(-9.2, 5.2),
-                     breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
-                     labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4','+5')) +
-  scale_y_continuous(limits = c( -0.155, 0.95),
-                     breaks = c(-0.15,0,0.15,0.30,0.45,0.60,0.75,0.90),
-                     labels = c('-0.15','0','0.15','0.30','0.45','0.60','0.75','0.90'))
-
-
-
-ggsave("Graphs/plot_cbo_bluecol.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
+# 
+# 
+# p <- ggplot(estimacoes_bcbo, aes(x = x, y = y, color = colour, group = group)) +
+#   geom_point(size = 3) +
+#   geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.2) +
+#   geom_hline(yintercept = 0, color = "#D62728") +
+#   geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
+#   scale_color_manual(values=c('black','red'),labels=c("Callaway & Sant'anna","Sun & Abraham")) +
+#   labs(x = "Years to treatment", y = '', colour = '') +
+#   theme_minimal(base_size = 14) +
+#   theme(
+#     panel.grid.major = element_blank(),
+#     panel.grid.minor = element_blank(),
+#     axis.line.x = element_line(),
+#     axis.line.y = element_line(),
+#     legend.position = "bottom"
+#   ) +
+#   scale_x_continuous(limits = c(-9.2, 5.2),
+#                      breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
+#                      labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4','+5')) +
+#   scale_y_continuous(limits = c( -0.155, 0.95),
+#                      breaks = c(-0.15,0,0.15,0.30,0.45,0.60,0.75,0.90),
+#                      labels = c('-0.15','0','0.15','0.30','0.45','0.60','0.75','0.90'))
+# 
+# 
+# 
+# ggsave("Graphs/plot_cbo_bluecol.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
 
 # ----------------------------------------------------------------------------- #
 ### 3.2.3 CNAE ----
@@ -443,32 +515,45 @@ estimacoes_bcnae <- plot(blue_data,
                          plot_title = '',
                          var_y = "dummy_cnae")
 
+# 
+# p <- ggplot(estimacoes_bcnae, aes(x = x, y = y, color = colour, group = group)) +
+#   geom_point(size = 3) +
+#   geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.2) +
+#   geom_hline(yintercept = 0, color = "#D62728") +
+#   geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
+#   scale_color_manual(values=c('black','red'),labels=c("Callaway & Sant'anna","Sun & Abraham")) +
+#   labs(x = "Years to treatment", y = '', colour = '') +
+#   theme_minimal(base_size = 14) +
+#   theme(
+#     panel.grid.major = element_blank(),
+#     panel.grid.minor = element_blank(),
+#     axis.line.x = element_line(),
+#     axis.line.y = element_line(),
+#     legend.position = "bottom"
+#   ) +
+#   scale_x_continuous(limits = c(-9.2, 5.2),
+#                      breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
+#                      labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4','+5')) +
+#   scale_y_continuous(limits = c( -0.155, 1.10),
+#                      breaks = c(-0.15,0,0.15,0.30,0.45,0.60,0.75,0.90, 1.05),
+#                      labels = c('-0.15','0','0.15','0.30','0.45','0.60','0.75','0.90', '1.05'))
+# 
+# 
+# 
+# ggsave("Graphs/plot_cnae_bluecol.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
 
-p <- ggplot(estimacoes_bcnae, aes(x = x, y = y, color = colour, group = group)) +
-  geom_point(size = 3) +
-  geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.2) +
-  geom_hline(yintercept = 0, color = "#D62728") +
-  geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
-  scale_color_manual(values=c('black','red'),labels=c("Callaway & Sant'anna","Sun & Abraham")) +
-  labs(x = "Years to treatment", y = '', colour = '') +
-  theme_minimal(base_size = 14) +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    axis.line.x = element_line(),
-    axis.line.y = element_line(),
-    legend.position = "bottom"
-  ) +
-  scale_x_continuous(limits = c(-9.2, 5.2),
-                     breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
-                     labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4','+5')) +
-  scale_y_continuous(limits = c( -0.155, 1.10),
-                     breaks = c(-0.15,0,0.15,0.30,0.45,0.60,0.75,0.90, 1.05),
-                     labels = c('-0.15','0','0.15','0.30','0.45','0.60','0.75','0.90', '1.05'))
+# ---------------------------------------------------------------------------- #
+### 3.2.4 Salary ----
+# ---------------------------------------------------------------------------- #
 
-
-
-ggsave("Graphs/plot_cnae_bluecol.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
+estimacoes_bsal <- plot(blue_data %>% 
+                         group_by(code_id) %>%
+                         filter(all(cnae_group[ano < year_first_treated] ==
+                                      cnae_pre_treat[ano < year_first_treated]),
+                                all_in_rais == 1) %>%
+                         ungroup(),
+                       plot_title = '',
+                       var_y = "remuneracao_media_sm_")
 
 
 # ---------------------------------------------------------------------------- #
@@ -479,111 +564,128 @@ estimacoes_wrais <- plot(white_data,
                          plot_title = '',
                          var_y = "rais_")
 
-
-p <- ggplot(estimacoes_wrais, aes(x = x, y = y, color = colour, group = group)) +
-  geom_point(size = 3) +
-  geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.2) +
-  geom_hline(yintercept = 0, color = "#D62728") +
-  geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
-  scale_color_manual(values=c('black','red'),labels=c("Callaway & Sant'anna","Sun & Abraham")) +
-  labs(x = "Years to treatment", y = '', colour = '') +
-  theme_minimal(base_size = 14) +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    axis.line.x = element_line(),
-    axis.line.y = element_line(),
-    legend.position = "bottom"
-  ) +
-  scale_x_continuous(limits = c(-9.2, 5.2),
-                     breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
-                     labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4','+5')) +
-  scale_y_continuous(limits = c(-0.95, 0.155),
-                     breaks = c(-0.90,-0.75,-0.60,-0.45,-0.30,-0.15,0,0.15),
-                     labels = c('-0.90','-0.75','-0.60','-0.45','-0.30','-0.15','0','0.15'))
-
-
-
-ggsave("Graphs/plot_rais_whitecol.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
-
+# 
+# p <- ggplot(estimacoes_wrais, aes(x = x, y = y, color = colour, group = group)) +
+#   geom_point(size = 3) +
+#   geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.2) +
+#   geom_hline(yintercept = 0, color = "#D62728") +
+#   geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
+#   scale_color_manual(values=c('black','red'),labels=c("Callaway & Sant'anna","Sun & Abraham")) +
+#   labs(x = "Years to treatment", y = '', colour = '') +
+#   theme_minimal(base_size = 14) +
+#   theme(
+#     panel.grid.major = element_blank(),
+#     panel.grid.minor = element_blank(),
+#     axis.line.x = element_line(),
+#     axis.line.y = element_line(),
+#     legend.position = "bottom"
+#   ) +
+#   scale_x_continuous(limits = c(-9.2, 5.2),
+#                      breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
+#                      labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4','+5')) +
+#   scale_y_continuous(limits = c(-0.95, 0.155),
+#                      breaks = c(-0.90,-0.75,-0.60,-0.45,-0.30,-0.15,0,0.15),
+#                      labels = c('-0.90','-0.75','-0.60','-0.45','-0.30','-0.15','0','0.15'))
+# 
+# 
+# 
+# ggsave("Graphs/plot_rais_whitecol.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
+# 
 
 
 
 # ---------------------------------------------------------------------------- #
 ### 3.3.2 CBO --------------
+# ---------------------------------------------------------------------------- #
+
 estimacoes_wcbo <- plot(white_data,
                         plot_title = '',
                         var_y = "dummy_cbo")
 
-
-p <- ggplot(estimacoes_wcbo, aes(x = x, y = y, color = colour, group = group)) +
-  geom_point(size = 3) +
-  geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.2) +
-  geom_hline(yintercept = 0, color = "#D62728") +
-  geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
-  scale_color_manual(values=c('black','red'),labels=c("Callaway & Sant'anna","Sun & Abraham")) +
-  labs(x = "Years to treatment", y = '', colour = '') +
-  theme_minimal(base_size = 14) +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    axis.line.x = element_line(),
-    axis.line.y = element_line(),
-    legend.position = "bottom"
-  ) +
-  scale_x_continuous(limits = c(-9.2, 5.2),
-                     breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
-                     labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4','+5')) +
-  scale_y_continuous(limits = c( -0.155, 1.10),
-                     breaks = c(-0.15,0,0.15,0.30,0.45,0.60,0.75,0.90, 1.05),
-                     labels = c('-0.15','0','0.15','0.30','0.45','0.60','0.75','0.90', '1.05'))
-
-
-
-ggsave("Graphs/plot_cbo_whitecol.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
-
+# 
+# p <- ggplot(estimacoes_wcbo, aes(x = x, y = y, color = colour, group = group)) +
+#   geom_point(size = 3) +
+#   geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.2) +
+#   geom_hline(yintercept = 0, color = "#D62728") +
+#   geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
+#   scale_color_manual(values=c('black','red'),labels=c("Callaway & Sant'anna","Sun & Abraham")) +
+#   labs(x = "Years to treatment", y = '', colour = '') +
+#   theme_minimal(base_size = 14) +
+#   theme(
+#     panel.grid.major = element_blank(),
+#     panel.grid.minor = element_blank(),
+#     axis.line.x = element_line(),
+#     axis.line.y = element_line(),
+#     legend.position = "bottom"
+#   ) +
+#   scale_x_continuous(limits = c(-9.2, 5.2),
+#                      breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
+#                      labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4','+5')) +
+#   scale_y_continuous(limits = c( -0.155, 1.10),
+#                      breaks = c(-0.15,0,0.15,0.30,0.45,0.60,0.75,0.90, 1.05),
+#                      labels = c('-0.15','0','0.15','0.30','0.45','0.60','0.75','0.90', '1.05'))
+# 
+# 
+# 
+# ggsave("Graphs/plot_cbo_whitecol.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
+# 
 
 # ---------------------------------------------------------------------------- #
 ### 3.3.3 CNAE --------------
+# ---------------------------------------------------------------------------- #
+
 estimacoes_wcnae <- plot(white_data,
                          plot_title = '',
                          var_y = "dummy_cnae"
 )
 
 
-p <- ggplot(estimacoes_wcnae, aes(x = x, y = y, color = colour, group = group)) +
-  geom_point(size = 3) +
-  geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.2) +
-  geom_hline(yintercept = 0, color = "#D62728") +
-  geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
-  scale_color_manual(values=c('black','red'),labels=c("Callaway & Sant'anna","Sun & Abraham")) +
-  labs(x = "Years to treatment", y = '', colour = '') +
-  theme_minimal(base_size = 14) +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    axis.line.x = element_line(),
-    axis.line.y = element_line(),
-    legend.position = "bottom"
-  ) +
-  scale_x_continuous(limits = c(-9.2, 5.2),
-                     breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
-                     labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4','+5')) +
-  scale_y_continuous(limits = c( -0.155, 1.10),
-                     breaks = c(-0.15,0,0.15,0.30,0.45,0.60,0.75,0.90, 1.05),
-                     labels = c('-0.15','0','0.15','0.30','0.45','0.60','0.75','0.90', '1.05'))
+# p <- ggplot(estimacoes_wcnae, aes(x = x, y = y, color = colour, group = group)) +
+#   geom_point(size = 3) +
+#   geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.2) +
+#   geom_hline(yintercept = 0, color = "#D62728") +
+#   geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
+#   scale_color_manual(values=c('black','red'),labels=c("Callaway & Sant'anna","Sun & Abraham")) +
+#   labs(x = "Years to treatment", y = '', colour = '') +
+#   theme_minimal(base_size = 14) +
+#   theme(
+#     panel.grid.major = element_blank(),
+#     panel.grid.minor = element_blank(),
+#     axis.line.x = element_line(),
+#     axis.line.y = element_line(),
+#     legend.position = "bottom"
+#   ) +
+#   scale_x_continuous(limits = c(-9.2, 5.2),
+#                      breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
+#                      labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4','+5')) +
+#   scale_y_continuous(limits = c( -0.155, 1.10),
+#                      breaks = c(-0.15,0,0.15,0.30,0.45,0.60,0.75,0.90, 1.05),
+#                      labels = c('-0.15','0','0.15','0.30','0.45','0.60','0.75','0.90', '1.05'))
+# 
+# 
+# 
+# ggsave("Graphs/plot_cnae_whitecol.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
 
+# ---------------------------------------------------------------------------- #
+### 3.3.4 Salary --------------
+# ---------------------------------------------------------------------------- #
 
-
-ggsave("Graphs/plot_cnae_whitecol.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
+estimacoes_wsal <- plot(white_data %>% 
+                         group_by(code_id) %>%
+                         filter(all(cnae_group[ano < year_first_treated] ==
+                                      cnae_pre_treat[ano < year_first_treated]),
+                                all_in_rais == 1) %>%
+                         ungroup(),
+                       plot_title = '',
+                       var_y = "remuneracao_media_sm_")
 
 # ---------------------------------------------------------------------------- #
 # 4. New Spec (WxB)----
 # ---------------------------------------------------------------------------- #
 ## 4.1 Data ----
-
-
+# ---------------------------------------------------------------------------- #
 ### 4.1.1 RAIS ----
+# ---------------------------------------------------------------------------- #
 
 estimacoes_brais$collar = 0#Blue
 estimacoes_wrais$collar = 1
@@ -602,8 +704,11 @@ both_rais <- both_rais %>%
     -collar
   )
 
-
+# ----------------------------------------------------------------------------- #
 ### 4.1.2 CBO ----
+# ----------------------------------------------------------------------------- #
+
+
 estimacoes_bcbo$collar = 0#Blue
 estimacoes_wcbo$collar = 1
 #União das Bases
@@ -621,8 +726,10 @@ both_cbo <- both_cbo %>%
   ) %>% 
   select(-collar)
 
-
+# ----------------------------------------------------------------------------- #
 ### 4.1.3 CNAE ----
+# ----------------------------------------------------------------------------- #
+
 estimacoes_bcnae$collar = 0#Blue
 estimacoes_wcnae$collar = 1
 #União das Bases
@@ -640,11 +747,34 @@ both_cnae <- both_cnae %>%
   ) %>% 
   select(-collar)
 
-### 4.1.4 Saving ----
+# ----------------------------------------------------------------------------- #
+### 4.1.4 Salary ----
+#'Joining salary estimation data.
+# ----------------------------------------------------------------------------- #
+estimacoes_bsal$collar = 0#Blue
+estimacoes_wsal$collar = 1
+
+both_sal <- rbind(estimacoes_bsal, estimacoes_wsal)
+
+both_sal <- both_sal %>% 
+  filter(group == 2) %>% 
+  mutate(
+    group = ifelse(collar == 1, 1, group),
+    
+    x = ifelse(collar == 1, x-0.2, x),
+    
+    colour = ifelse(group == 2, "#f7200a", colour)
+  ) %>% 
+  select(-collar)
+
+# ----------------------------------------------------------------------------- #
+### 4.1.5 Saving ----
+# ----------------------------------------------------------------------------- #
 # saveRDS(estimacoes_rais, "C:/Users/tuffy/Documents/IC/Bases/results_est/rais_total.RDS")
 # saveRDS(both_rais, "C:/Users/tuffy/Documents/IC/Bases/results_est/rais_both_wc.RDS")
 # saveRDS(both_cbo, "C:/Users/tuffy/Documents/IC/Bases/results_est/cbo_both_wc.RDS")
 # saveRDS(both_cnae, "C:/Users/tuffy/Documents/IC/Bases/results_est/cnae_both_wc.RDS")
+# saveRDS(both_sal, "C:/Users/tuffy/Documents/IC/Bases/results_est/sal_both_wc.RDS")
 
 
 
@@ -652,6 +782,7 @@ both_cnae <- both_cnae %>%
 # ---------------------------------------------------------------------------- #
 ## 4.2 Estimation ----
 ### 4.2.1 RAIS ----
+# ----------------------------------------------------------------------------- #
 #both_rais <- readRDS("C:/Users/tuffy/Documents/IC/Bases/results_est/rais_both_wc.RDS")
 
 
@@ -692,7 +823,7 @@ ggsave("C:/Users/tuffy/Documents/IC/Graphs/united/plot_rais_wb_col.pdf", plot = 
 
 #  --------------------------------------------------------------------------- #
 ### 4.2.2 CBO ----
-
+# ----------------------------------------------------------------------------- #
 
 
 #both_cbo <- readRDS("C:/Users/tuffy/Documents/IC/Bases/results_est/cbo_both_wc.RDS")
@@ -734,7 +865,7 @@ ggsave("C:/Users/tuffy/Documents/IC/Graphs/united/plot_cbo_wb_col.pdf", plot = p
 
 # ---------------------------------------------------------------------------- #
 ### 4.2.3 CNAE ----
-
+# ----------------------------------------------------------------------------- #
 
 #both_cnae <- readRDS( "C:/Users/tuffy/Documents/IC/Bases/results_est/cnae_both_wc.RDS")
 
@@ -773,7 +904,47 @@ ggsave("C:/Users/tuffy/Documents/IC/Graphs/united/plot_cnae_wb_col.jpeg", plot =
 ggsave("C:/Users/tuffy/Documents/IC/Graphs/united/plot_cnae_wb_col.pdf", plot = p, device = "pdf", width = 10, height = 6, dpi = 300)
 
 
+# ---------------------------------------------------------------------------- #
+### 4.2.4 Salary ----
+# ---------------------------------------------------------------------------- #
 
+p <- ggplot(both_sal, aes(x = x, y = y, color = colour, group = group)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.5) +
+  geom_hline(yintercept = 0, color = "#D62728") +
+  geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed") +
+  scale_color_manual(values=c('black','red'),labels=c("White-collar","Blue-collar")) +
+  labs(x = "Years to treatment", y = '', colour = '') +
+  theme_classic(base_size = 18) +   
+  theme(
+    axis.line = element_line(),
+    axis.ticks.length = unit(5, "pt"),
+    axis.ticks = element_line(colour = "black"),  
+    axis.ticks.x = element_line(colour = "black"),
+    axis.ticks.y = element_line(colour = "black"),
+    axis.text.x = element_text(margin = margin(t = 5)),
+    axis.text.y = element_text(),
+    
+    legend.text = element_text(size = 18),
+    legend.position = c(0.25, 0.25),         
+    legend.justification = c(1, 1)
+    ) +           
+    scale_x_continuous(
+      limits = c(-9.5, 4.5),
+      breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4),
+      labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4'),
+      minor_breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4)  
+    ) +
+      scale_y_continuous(
+        limits = c(-0.6, 0.45),
+        breaks = seq(-0.6, 0.45, by = 0.15),
+        labels = sprintf("%.2f", seq(-0.6, 0.45, by = 0.15))
+      )
+
+p
+
+ggsave("C:/Users/tuffy/Documents/IC/Graphs/final/plot_sal_wb_col.jpeg", plot = p, device = "jpeg", width = 10, height = 6, dpi = 600)
+ggsave("C:/Users/tuffy/Documents/IC/Graphs/final/pdf/plot_sal_wb_col.pdf", plot = p, device = "pdf", width = 10, height = 6, dpi = 300)
 
 
 # ---------------------------------------------------------------------------- #
@@ -803,13 +974,14 @@ stargazer(white_data,
           label = "tab:desc_white",
           file = "C:/Users/tuffy/Documents/IC/Tables/white_desc.tex")
 
+t.test(remuneracao_media_sm_ ~ white_dummy, data = data)
+
 # ---------------------------------------------------------------------------- #
 # 6. ATT Values ----
 # ---------------------------------------------------------------------------- #
-
-
 ## 6.1 RAIS ----
 ### 6.1.1 No Controls ----
+# ---------------------------------------------------------------------------- #
 
 no_control <- did::att_gt(
   yname = "rais_",
@@ -833,8 +1005,9 @@ print(est_calsan_scs)
 result_rais$att_nc[1] <- est_calsan_sc1$overall.att #ATT
 result_rais$att_nc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
-
+# ---------------------------------------------------------------------------- #
 ### 6.1.2 With Controls -----
+# ---------------------------------------------------------------------------- #
 
 w_control <- did::att_gt(
   yname = "rais_",
@@ -859,6 +1032,9 @@ rm(w_control)
 
 # ---------------------------------------------------------------------------- #
 ## 6.2 CBO ----
+# ---------------------------------------------------------------------------- #
+### 6.2.1 No Controls ----
+# ---------------------------------------------------------------------------- #
 
 no_control <- did::att_gt(
   yname = "dummy_cbo",
@@ -871,6 +1047,9 @@ no_control <- did::att_gt(
   clustervars = "code_id"
 )
 
+# ----------------------------------------------------------------------------- #
+### 6.2.2 Table Both ----
+# ---------------------------------------------------------------------------- #
 
 
 est_calsan_sc1 <- aggte( MP = no_control, type = "dynamic", na.rm = TRUE)
@@ -886,6 +1065,8 @@ result_cbo$att_nc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),
 
 # ---------------------------------------------------------------------------- #
 ## 6.3 CNAE ----
+### 6.3.1 No Controls ----
+# ---------------------------------------------------------------------------- #
 
 no_control <- did::att_gt(
   yname = "dummy_cnae",
@@ -899,6 +1080,9 @@ no_control <- did::att_gt(
 )
 
 
+# ---------------------------------------------------------------------------- #
+### 6.3.2 Table Both ----
+# ---------------------------------------------------------------------------- #
 
 est_calsan_sc1 <- aggte( MP = no_control, type = "dynamic", na.rm = TRUE)
 est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
@@ -909,10 +1093,107 @@ print(est_calsan_scs)
 result_cnae$att_nc[1] <- est_calsan_sc1$overall.att #ATT
 result_cnae$att_nc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
+# ---------------------------------------------------------------------------- #
+## 6.4 Salary ----
+# ---------------------------------------------------------------------------- #
+### 6.4.1 No Controls ----
+# ---------------------------------------------------------------------------- #
+
+
+no_control <- did::att_gt(
+  yname = "remuneracao_media_sm_",
+  gname = "year_first_treated",
+  idname = "code_id",
+  tname = "ano",
+  data = data %>% 
+    group_by(code_id) %>%
+    filter(all(cnae_group[ano < year_first_treated] ==
+                 cnae_pre_treat[ano < year_first_treated]),
+           all_in_rais == 1) %>%
+    ungroup(),
+  control_group = "notyettreated",
+  base_period = "universal",
+  clustervars = "code_id"
+)
+
+# ----------------------------------------------------------------------------- #
+#### 6.4.1.1 Table No Controls----
+# ----------------------------------------------------------------------------- #
+
+est_calsan_sc1 <- aggte( MP = no_control, type = "dynamic", na.rm = TRUE)
+est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
+print(est_calsan_sc1)
+print(est_calsan_scs)
+
+att <- est_calsan_sc1$overall.att
+se  <- est_calsan_sc1$overall.se
+
+z_value <- att / se
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+
+
+
+#Saving in the result table
+result_sal$att_nc[1] <- paste0(round(att, 4), stars)
+result_sal$att_nc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
+result_sal$att_nc[5] <- nrow(data %>% 
+       group_by(code_id) %>%
+       filter(all(cnae_group[ano < year_first_treated] ==
+                    cnae_pre_treat[ano < year_first_treated]),
+              all_in_rais == 1) %>%
+       ungroup()) #Observations
+# ----------------------------------------------------------------------------- #
+### 6.4.2 With Controls ----
+# ----------------------------------------------------------------------------- #
+
+w_control <- did::att_gt(
+  yname = "remuneracao_media_sm_",
+  gname = "year_first_treated",
+  idname = "code_id",
+  tname = "ano",
+  data = data %>% 
+    group_by(code_id) %>%
+    filter(all(cnae_group[ano < year_first_treated] ==
+                 cnae_pre_treat[ano < year_first_treated]),
+           all_in_rais == 1) %>%
+    ungroup(),
+  xformla = ~ ano_sexo + ano_branco + ano_ensino + code_id, 
+  control_group = "notyettreated",
+  base_period = "universal",
+  clustervars = "code_id"
+  )
+
+
+est_calsan_sc1 <- aggte( MP = w_control, type = "dynamic", na.rm = TRUE)
+att <- est_calsan_sc1$overall.att
+se  <- est_calsan_sc1$overall.se
+z_value <- att / se
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+
+#Saving in the result table
+result_sal$att_fc[1] <- paste0(round(att, 4), stars)
+result_sal$att_fc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
+result_sal$att_fc[5] <- nrow(data %>% 
+       group_by(code_id) %>%
+       filter(all(cnae_group[ano < year_first_treated] ==
+                    cnae_pre_treat[ano < year_first_treated]),
+              all_in_rais == 1) %>%
+       ungroup()) #Observations
+
+rm(w_control)
 
 # ---------------------------------------------------------------------------- #
-## 6.4 Blue Collar ----
-### 6.4.1 RAIS BC ----
+## 6.5 Blue Collar ----
+### 6.5.1 RAIS BC ----
+# ---------------------------------------------------------------------------- #
+
 
 no_control <- did::att_gt(
   yname = "rais_",
@@ -938,7 +1219,8 @@ result_rais$att_bc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4)
 
 
 # ---------------------------------------------------------------------------- #
-### 6.4.2 CBO BC ----
+### 6.5.2 CBO BC ----
+# ----------------------------------------------------------------------------- #
 
 no_control <- did::att_gt(
   yname = "dummy_cbo",
@@ -964,7 +1246,9 @@ result_cbo$att_bc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),
 
 
 # ---------------------------------------------------------------------------- #
-### 6.4.3 CNAE BC ----
+### 6.5.3 CNAE BC ----
+# ----------------------------------------------------------------------------- #
+
 
 no_control <- did::att_gt(
   yname = "dummy_cnae",
@@ -988,10 +1272,61 @@ print(est_calsan_scs)
 result_cnae$att_bc[1] <- est_calsan_sc1$overall.att #ATT
 result_cnae$att_bc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
+# ----------------------------------------------------------------------------- #
+### 6.5.4 Salary BC ----
+# ----------------------------------------------------------------------------- #
+
+w_control <- did::att_gt(
+  yname = "remuneracao_media_sm_",
+  gname = "year_first_treated",
+  idname = "code_id",
+  tname = "ano",
+  data = blue_data %>% 
+    group_by(code_id) %>%
+    filter(all(cnae_group[ano < year_first_treated] ==
+                 cnae_pre_treat[ano < year_first_treated]),
+           all_in_rais == 1) %>%
+    ungroup(),
+  xformla = ~ ano_sexo + ano_branco + ano_ensino + code_id,
+  control_group = "notyettreated",
+  base_period = "universal",
+  clustervars = "code_id"
+)
+
+
+
+est_calsan_sc1 <- aggte( MP = w_control, type = "dynamic", na.rm = TRUE)
+est_calsan_scs <- aggte( MP = w_control, type = "simple", na.rm = T)
+print(est_calsan_sc1)
+print(est_calsan_scs)
+
+
+att <- est_calsan_sc1$overall.att
+se  <- est_calsan_sc1$overall.se
+
+z_value <- att / se
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+
+#Saving in the result table
+result_sal$att_bc[1] <- paste0(round(att, 4), stars)
+result_sal$att_bc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
+result_sal$att_bc[5] <- nrow(blue_data %>% 
+       group_by(code_id) %>%
+       filter(all(cnae_group[ano < year_first_treated] ==
+                    cnae_pre_treat[ano < year_first_treated]),
+              all_in_rais == 1) %>%
+       ungroup()) #Observations
+
+rm(att, se, z_value, p_value, stars)
 
 # ---------------------------------------------------------------------------- #
-## 6.5 White Collar ----
-### 6.5.1 RAIS WC ----
+## 6.6 White Collar ----
+### 6.6.1 RAIS WC ----
+# ---------------------------------------------------------------------------- #
 
 no_control <- did::att_gt(
   yname = "rais_",
@@ -1017,8 +1352,8 @@ result_rais$att_wc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4)
 
 
 # ---------------------------------------------------------------------------- #
-### 6.5.2 CBO WC ----
-
+### 6.6.2 CBO WC ----
+# ----------------------------------------------------------------------------- #
 no_control <- did::att_gt(
   yname = "dummy_cbo",
   gname = "year_first_treated",
@@ -1043,7 +1378,9 @@ result_cbo$att_wc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),
 
 
 # ---------------------------------------------------------------------------- #
-### 6.5.3 CNAE WC ----
+### 6.6.3 CNAE WC ----
+# ----------------------------------------------------------------------------- #
+
 
 no_control <- did::att_gt(
   yname = "dummy_cnae",
@@ -1067,12 +1404,56 @@ print(est_calsan_scs)
 result_cnae$att_wc[1] <- est_calsan_sc1$overall.att #ATT
 result_cnae$att_wc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
+# ----------------------------------------------------------------------------- #
+### 6.6.4 Salary WC ----
+# ----------------------------------------------------------------------------- #
+
+w_control <- did::att_gt(
+  yname = "remuneracao_media_sm_",
+  gname = "year_first_treated",
+  idname = "code_id",
+  tname = "ano",
+  data = white_data %>% 
+    group_by(code_id) %>%
+    filter(all(cnae_group[ano < year_first_treated] ==
+                 cnae_pre_treat[ano < year_first_treated]),
+           all_in_rais == 1) %>%
+    ungroup(),
+  control_group = "notyettreated",
+  base_period = "universal",
+  clustervars = "code_id"
+)
+
+est_calsan_sc1 <- aggte( MP = w_control, type = "dynamic", na.rm = TRUE)
+est_calsan_scs <- aggte( MP = w_control, type = "simple", na.rm = T)
+
+att <- est_calsan_sc1$overall.att
+se  <- est_calsan_sc1$overall.se
+
+z_value <- att / se
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+
+#Saving in the result table
+result_sal$att_wc[1] <- paste0(round(att, 4), stars)
+result_sal$att_wc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
+result_sal$att_wc[5] <- nrow(white_data %>% 
+       group_by(code_id) %>%
+       filter(all(cnae_group[ano < year_first_treated] ==
+                    cnae_pre_treat[ano < year_first_treated]),
+              all_in_rais == 1) %>%
+       ungroup()) #Observations
+
+rm(att, se, z_value, p_value, stars)
 
 # ---------------------------------------------------------------------------- #
 # 7. Pre-Avg ----
 # ---------------------------------------------------------------------------- #
 ## 7.1 RAIS ----
 ### 7.1.1 With Controls -----
+# ----------------------------------------------------------------------------- #
 
 #RAIS - Controles
 pre_avg <- did::att_gt(
@@ -1135,7 +1516,7 @@ result_rais$att_fc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
 # ---------------------------------------------------------------------------- #
 ### 7.1.2 No Controls ----
-
+# ---------------------------------------------------------------------------- #
 
 #RAIS - Sem Controles
 pre_avg <- did::att_gt(
@@ -1436,6 +1817,144 @@ print(se_equal)
 result_cnae$att_nc[3] <- pre_av #ATT
 result_cnae$att_nc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
+# ----------------------------------------------------------------------------- #
+## 7.4 Salary ----
+# ---------------------------------------------------------------------------- #
+### 7.4.1 With Controls ----
+# ---------------------------------------------------------------------------- #
+
+pre_avg <- did::att_gt(
+  yname = "remuneracao_media_sm_",
+  gname = "year_first_treated",
+  idname = "code_id",
+  tname = "ano",
+  xformla = ~ ano_sexo + ano_branco + ano_ensino + code_id,
+  data = data %>% 
+    group_by(code_id) %>%
+    filter(all(cnae_group[ano < year_first_treated] ==
+                 cnae_pre_treat[ano < year_first_treated]),
+           all_in_rais == 1) %>%
+    ungroup(),
+  control_group = "notyettreated",
+  base_period = "universal",
+  clustervars = "code_id"
+)
+
+pre_dyn <- aggte(pre_avg, type = "dynamic", na.rm = T)
+
+# Calculate pre-avg ATT and SE
+# Identificar os períodos pré-tratamento
+pre_egt <- pre_dyn$egt < 0
+
+# Calcular a média dos efeitos placebo
+pre_av <- mean(pre_dyn$att.egt[pre_egt], na.rm = TRUE)
+
+#SE
+es_inf_func <- pre_dyn$inf.function$dynamic.inf.func.e
+n <- nrow(es_inf_func)
+V <- t(es_inf_func) %*% es_inf_func / n / n
+
+
+
+
+## 1) take the 8x8 block from V (rows/cols 1..8 as shown)
+V8 <- V[1:8, 1:8]
+
+## 2) equal weights
+w <- rep(1/8, 8)
+
+## 3) scalar variance of the equal-weighted average: w' V w
+var_equal <- as.numeric(crossprod(w, V8 %*% w))
+
+## 4) corresponding SE (if you need it)
+se_equal  <- sqrt(var_equal)
+
+## Outputs:
+var_equal  # "remove sqrt" -> this is what you want if you only want the value without sqrt
+se_equal   # optional: the average SE (with sqrt)
+
+
+
+z_value <- pre_av / se_equal
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+
+#Saving in the result table
+result_sal$att_fc[3] <- paste0(round(pre_av, 4), stars) #ATT
+result_sal$att_fc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
+
+rm(pre_av, se_equal, z_value, p_value, stars)
+
+# ---------------------------------------------------------------------------- #
+### 7.4.2 No Controls ----
+# ---------------------------------------------------------------------------- #
+
+pre_avg <- did::att_gt(
+  yname = "remuneracao_media_sm_",
+  gname = "year_first_treated",
+  idname = "code_id",
+  tname = "ano",
+  data = data %>% 
+    group_by(code_id) %>%
+    filter(all(cnae_group[ano < year_first_treated] ==
+                 cnae_pre_treat[ano < year_first_treated]),
+           all_in_rais == 1) %>%
+    ungroup(),,
+  control_group = "notyettreated",
+  base_period = "universal",
+  clustervars = "code_id"
+)
+
+pre_dyn <- aggte(pre_avg, type = "dynamic", na.rm = T)
+# Calculate pre-avg ATT and SE
+# Identificar os períodos pré-tratamento
+pre_egt <- pre_dyn$egt < 0
+# Calcular a média dos efeitos placebo
+pre_av <- mean(pre_dyn$att.egt[pre_egt], na.rm = TRUE)
+
+pre_dyn <- aggte(pre_avg, type = "dynamic", na.rm = T)
+
+# Calculate pre-avg ATT and SE
+# Identificar os períodos pré-tratamento
+pre_egt <- pre_dyn$egt < 0
+
+# Calcular a média dos efeitos placebo
+pre_av <- mean(pre_dyn$att.egt[pre_egt], na.rm = TRUE)
+
+#SE
+es_inf_func <- pre_dyn$inf.function$dynamic.inf.func.e
+n <- nrow(es_inf_func)
+V <- t(es_inf_func) %*% es_inf_func / n / n
+
+## 1) take the 8x8 block from V (rows/cols 1..8 as shown)
+V8 <- V[1:8, 1:8]
+
+## 2) equal weights
+w <- rep(1/8, 8)
+
+## 3) scalar variance of the equal-weighted average: w' V w
+var_equal <- as.numeric(crossprod(w, V8 %*% w))
+
+## 4) corresponding SE (if you need it)
+se_equal  <- sqrt(var_equal)
+
+## Outputs:
+var_equal  # "remove sqrt" -> this is what you want if you only want the value without sqrt
+se_equal   # optional: the average SE (with sqrt)
+
+z_value <- pre_av / se_equal
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+
+#Saving in the result table
+result_sal$att_nc[3] <- paste0(round(pre_av, 4), stars) #ATT
+result_sal$att_nc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
+rm(pre_av, se_equal, z_value, p_value, stars)
 
 # ---------------------------------------------------------------------------- #
 ## 7.4 Blue Collar ----
@@ -1618,6 +2137,59 @@ print(se_equal)
 result_cnae$att_bc[3] <- pre_av #ATT
 result_cnae$att_bc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
+# ---------------------------------------------------------------------------- #
+###7.4.4 Salary - Controles ----
+# ---------------------------------------------------------------------------- #
+
+pre_avg <- did::att_gt(
+  yname = "remuneracao_media_sm_",
+  gname = "year_first_treated",
+  idname = "code_id",
+  tname = "ano",
+  xformla = ~ ano_sexo + ano_branco + ano_ensino + code_id,
+  data = blue_data %>% 
+    group_by(code_id) %>%
+    filter(all(cnae_group[ano < year_first_treated] ==
+                 cnae_pre_treat[ano < year_first_treated]),
+           all_in_rais == 1) %>%
+    ungroup(),
+  control_group = "notyettreated",
+  base_period = "universal",
+  clustervars = "code_id"
+)
+
+pre_dyn <- aggte(pre_avg, type = "dynamic", na.rm = T)
+# Calculate pre-avg ATT and SE
+# Identificar os períodos pré-tratamento
+pre_egt <- pre_dyn$egt < 0
+# Calcular a média dos efeitos placebo
+pre_av <- mean(pre_dyn$att.egt[pre_egt], na.rm = TRUE)
+#SE
+es_inf_func <- pre_dyn$inf.function$dynamic.inf.func.e
+n <- nrow(es_inf_func)
+V <- t(es_inf_func) %*% es_inf_func / n / n
+## 1) take the 8x8 block from V (rows/cols 1..8 as shown)
+V8 <- V[1:8, 1:8]
+## 2) equal weights
+w <- rep(1/8, 8)
+## 3) scalar variance of the equal-weighted average: w' V w
+var_equal <- as.numeric(crossprod(w, V8 %*% w))
+## 4) corresponding SE (if you need it)
+se_equal  <- sqrt(var_equal)
+## Outputs:
+var_equal  # "remove sqrt" -> this is what you want if you only want the value without sqrt
+se_equal   # optional: the average SE (with sqrt)
+
+z_value <- pre_av / se_equal
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+#Saving in the result table
+result_sal$att_bc[3] <- paste0(round(pre_av, 4), stars ) #ATT
+
+result_sal$att_bc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
+rm(pre_av, se_equal, z_value, p_value, stars)
 
 # ---------------------------------------------------------------------------- #
 ## 7.5 White Collar ----
@@ -1738,8 +2310,9 @@ print(se_equal)
 result_cbo$att_wc[3] <- pre_av #ATT
 result_cbo$att_wc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
-
+# ---------------------------------------------------------------------------- #
 ### 7.5.3 CNAE ----
+# ---------------------------------------------------------------------------- #
 pre_avg <- did::att_gt(
   yname = "dummy_cnae",
   gname = "year_first_treated",
@@ -1795,21 +2368,79 @@ result_cnae$att_wc[3] <- pre_av #ATT
 result_cnae$att_wc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
 # ---------------------------------------------------------------------------- #
+### 7.5.4 Salary - Controles ----
+# ---------------------------------------------------------------------------- #
+
+pre_avg <- did::att_gt(
+  yname = "remuneracao_media_sm_",
+  gname = "year_first_treated",
+  idname = "code_id",
+  tname = "ano",
+  xformla = ~ ano_sexo + ano_branco + ano_ensino + code_id,
+  data = white_data %>% 
+    group_by(code_id) %>%
+    filter(all(cnae_group[ano < year_first_treated] ==
+                 cnae_pre_treat[ano < year_first_treated]),
+           all_in_rais == 1) %>%
+    ungroup(),
+  control_group = "notyettreated",
+  base_period = "universal",
+  clustervars = "code_id"
+)
+
+pre_dyn <- aggte(pre_avg, type = "dynamic", na.rm = T)
+# Calculate pre-avg ATT and SE
+# Selecting pre-treatment periods
+pre_egt <- pre_dyn$egt < 0
+#Calculating the mean effect
+pre_av <- mean(pre_dyn$att.egt[pre_egt], na.rm = TRUE)
+#SE
+es_inf_func <- pre_dyn$inf.function$dynamic.inf.func.e
+n <- nrow(es_inf_func)
+V <- t(es_inf_func) %*% es_inf_func / n / n
+## 1) take the 8x8 block from V (rows/cols 1:8 as shown)
+V8 <- V[1:8, 1:8]
+## 2) equal weights
+w <- rep(1/8, 8)
+## 3) scalar variance of the equal-weighted average: w' V w
+var_equal <- as.numeric(crossprod(w, V8 %*% w))
+
+## 4) corresponding SE (if you need it)
+se_equal  <- sqrt(var_equal)
+## Outputs:
+var_equal  # "remove sqrt" -> this is what you want if you only want the
+# value without sqrt
+se_equal   # optional: the average SE (with sqrt)
+
+z_value <- pre_av / se_equal
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+#Saving in the result table
+result_sal$att_wc[3] <- paste0(round(pre_av, 4), stars) #ATT
+result_sal$att_wc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
+rm(pre_av, se_equal, z_value, p_value, stars)
+
+
+
+# ---------------------------------------------------------------------------- #
 # 8. Final Tables ----
 # ---------------------------------------------------------------------------- #
 
-loop <- c("rais","cbo","cnae")
+loop <- c("rais","cbo","cnae", "sal")
 
 for (name in loop) {
   
   # Cria a tabela LaTeX
   latex_table <- knitr::kable(
-    paste0("result_",name),
+    get(paste0("result_", name)),
     format = "latex",
     booktabs = TRUE,
-    align = "lc",
+    align = "lcccc",
     linesep = ""
   )
+  
   
   writeLines(latex_table, paste0("C:/Users/tuffy/Documents/IC/Tables/",name,"_main.tex"))
   
