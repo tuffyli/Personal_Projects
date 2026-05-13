@@ -1,5 +1,5 @@
 ---
-title: "Sample_Project"
+title: "Alimony Rights and Young Women's Education in Brazil"
 author: "Tuffy Licciardi Issa"
 date: "2025-10-25"
 output:
@@ -12,73 +12,88 @@ output:
     code_folding: show
     df_print: paged
   word_document: default
-lang: "pt-BR"
 ---
 
-
-> This document is a minimal, reproducible sample of my empirical workflow  
+> This document is a minimal, reproducible sample of my empirical workflow.  
 > Full code and additional projects: **[github.com/tuffyli](https://github.com/tuffyli)**
 
 ```{r setup, include=FALSE}
 set.seed(123)
 
-# Load packages
-library(dplyr);library(here);library(tidyverse);library(stargazer);library(MatchIt);library(broom);library(kableExtra);library(cobalt); library(cowplot);library(fixest)
+knitr::opts_chunk$set(
+  fig_crop = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
 
+library(cobalt)
+library(cowplot)
+library(dplyr)
+library(fixest)
+library(ggplot2)
+library(kableExtra)
+library(MatchIt)
+library(purrr)
+
+project_dir <- normalizePath(
+  if (file.exists(file.path("data", "final_filtered_9295.rds"))) {
+    "."
+  } else if (file.exists(file.path("..", "data", "final_filtered_9295.rds"))) {
+    ".."
+  } else {
+    stop("Run this document from the PNAD-exercise folder or its code subfolder.")
+  },
+  winslash = "/"
+)
+
+project_path <- function(...) file.path(project_dir, ...)
 ```
 
 # Objectives
 
-The main objective of this sample work is to explore the expansion of Brazil’s alimony rights to women in stable unions and its effects on education, particularly among young women who became newly entitled to this right.  
-This analysis is inspired by Rangel’s (2006) seminal work on the policy’s expansion. The main difference in this study is the application of an additional Propensity Score Matching (PSM) method, with a particular focus on young mothers and their educational decisions.
+This sample studies whether the expansion of alimony rights in Brazil affected the educational attainment of young women who became newly eligible for those rights. The exercise is inspired by Rangel (2006), with an additional propensity score matching step used to improve balance between treated and control women before estimating treatment effects.
 
 # Data
 
-In the **[repository](https://github.com/Tuffyli/Personal_Projects/tree/main/PNAD-exercise)**, I include supplementary code detailing the selection of key variables.  
-Due to the large size of the PNAD dataset, it is not possible to make the full data publicly available. Therefore, I provide a filtered version of the dataset containing only the variables relevant to the analysis.
+The analysis uses PNAD microdata for 1992, 1993, and 1995. The full PNAD files are not redistributed because of size constraints, but the repository includes a filtered dataset with the variables used in this exercise.
 
-```{r}
-# ------------------- #
-# 1. Data Extraction ----
+```{r data}
+data <- readRDS(project_path("data", "final_filtered_9295.rds"))
+summary_table <- readRDS(project_path("data", "summary.rds"))
 
-data <- readRDS("C:/Users/tuffy/Documents/Personal_Projects/PNAD-exercise/data/final_filtered_9295.rds")
-
-#1.1 Summary ----
-#' In the data manipulation code I created a summary table. Here I present it
-
-summary <- readRDS("C:/Users/tuffy/Documents/Personal_Projects/PNAD-exercise/data/summary.rds")
-print(summary)
-
-rm(summary)
+knitr::kable(
+  summary_table,
+  digits = 2,
+  caption = "Weighted descriptive statistics for the analysis sample"
+)
 ```
 
-Treated individuals are women aged 15–24 in non-civil unions (consensual or religious-only) who are household heads or spouses; controls are otherwise similar women in legally recognized unions (civil or civil + religious).
+Treated individuals are women aged 15-24 in non-civil unions, either consensual or religious-only, who are household heads or spouses. Controls are otherwise similar women in legally recognized unions, either civil or civil plus religious.
 
 # Propensity Score Matching
 
-In this next step I will execute the propensity score matching between treated and control females.
+I estimate propensity scores separately by year and match treated women to controls using nearest-neighbor matching with replacement. The balance plots below compare standardized mean differences before and after matching.
 
-```{r PSM, warning=FALSE, fig.width=6, fig.height=6, fig.align='center'}
-# -------------------------------------------------------------------
-# 2. PSM balance
-# ------------------------------------------------------------------
-plots <- list()
-
-for (year in c(1992, 1993, 1995)) {
-  df_psm <- data %>% 
-    filter(ano == year) %>% 
+```{r psm, fig.width=6, fig.height=6, fig.align='center'}
+match_year <- function(year, input_data) {
+  df_psm <- input_data %>%
+    filter(ano == year) %>%
     select(
       treatment, uf, age, cor, anos_estudo, peso_pessoa,
       ultima_serie_concluida, tipo_curso_frequenta, grupo_cbo,
       trabalhou_ultimo_ano, renda_dom_per_capita,
       dummy_filhos_homens_dom, dummy_filhos_mulheres_dom,
       pensao_dummy, total_filhos
-    ) %>% 
-    mutate(uf = as.factor(uf)) %>% 
+    ) %>%
+    mutate(uf = as.factor(uf)) %>%
     filter(
-      !is.na(treatment), !is.na(uf), !is.na(cor), !is.na(peso_pessoa),
-      !is.na(dummy_filhos_homens_dom), !is.na(dummy_filhos_mulheres_dom),
-      !is.na(renda_dom_per_capita), !is.na(total_filhos)
+      if_all(
+        c(
+          treatment, uf, cor, peso_pessoa, dummy_filhos_homens_dom,
+          dummy_filhos_mulheres_dom, renda_dom_per_capita, total_filhos
+        ),
+        ~ !is.na(.x)
+      )
     )
 
   match_model <- matchit(
@@ -91,142 +106,136 @@ for (year in c(1992, 1993, 1995)) {
     replace = TRUE
   )
 
-  # Show the match summary counts in the document
-  sum <- summary(match_model)
-  latex_df <- as.data.frame(sum$nn)
-  latex_table <- kable(latex_df,
-                       format = "latex",
-                       booktabs = TRUE,
-                       caption = "Estatísticas descritivas ponderadas",
-                       align = "lccc")
+  match_summary <- as.data.frame(summary(match_model)$nn)
+  match_summary_path <- project_path("match-tables", paste0(year, "_match_summary.tex"))
+  dir.create(dirname(match_summary_path), showWarnings = FALSE, recursive = TRUE)
+  writeLines(
+    kable(
+      match_summary,
+      format = "latex",
+      booktabs = TRUE,
+      caption = paste("Matching sample counts,", year),
+      align = "lccc"
+    ),
+    match_summary_path
+  )
 
-  #The files are availabre in the repository
-  writeLines(latex_table, 
-             paste0("C:/Users/tuffy/Documents/Trabalhos/", year,"_match_summary.tex"))
-
-
-  # Love plot (INLINE)
   custom_labels <- c(
     distance_weighted         = "Distance (weighted)",
     uf                        = "UF",
     cor                       = "Race/Color",
-    dummy_filhos_homens_dom   = "Male child",
-    dummy_filhos_mulheres_dom = "Female child",
+    dummy_filhos_homens_dom   = "Male children in household",
+    dummy_filhos_mulheres_dom = "Female children in household",
     age                       = "Age",
-    renda_dom_per_capita      = "H. per-capita income",
+    renda_dom_per_capita      = "Household per-capita income",
     total_filhos              = "Total children"
   )
 
-  love <- love.plot(
+  balance_plot <- love.plot(
     match_model,
-    stats         = "mean.diffs",
-    abs           = TRUE,
-    threshold     = 0.10,
-    colors        = c("black", "red"),
-    line          = TRUE,
-    var.names     = custom_labels,
+    stats = "mean.diffs",
+    abs = TRUE,
+    threshold = 0.10,
+    colors = c("black", "red"),
+    line = TRUE,
+    var.names = custom_labels,
     drop.distance = TRUE
   ) +
-    labs(
-      title = paste0("Covs. Adjustment: ",year)
-    ) +
-   theme_minimal(base_size = 5) +
-    theme(plot.title = element_text(face = "bold"),
-                   legend.position = "bottom")
-  #Grouping the plots
-  plots[[as.character(year)]] <- love
+    labs(title = paste("Covariate balance:", year)) +
+    theme_minimal(base_size = 5) +
+    theme(
+      plot.title = element_text(face = "bold"),
+      legend.position = "bottom"
+    )
 
-
-  matched_data <- match.data(match_model) %>%
-    mutate(ano = year)
-
-  assign(paste0("df_matched_", year), matched_data)
-  rm(year, custom_labels, sum, ess_table, latex_df, latex_table, love)
-
+  list(
+    matched_data = match.data(match_model) %>% mutate(ano = year),
+    balance_plot = balance_plot
+  )
 }
 
-top    <- cowplot::plot_grid(plots[["1992"]], plots[["1993"]],
-                             ncol = 2, align = "hv", rel_widths = c(1, 1))
-bottom <- cowplot::plot_grid(plots[["1995"]],
-                             ncol = 2, align = "hv", rel_widths = c(1, 1))  # legend stays here
+match_results <- set_names(c(1992, 1993, 1995)) %>%
+  map(match_year, input_data = data)
 
-combined <- cowplot::plot_grid(top, bottom, ncol = 1, rel_heights = c(1, 1.05))
-combined
+plots <- map(match_results, "balance_plot")
 
+top <- cowplot::plot_grid(
+  plots[["1992"]],
+  plots[["1993"]],
+  ncol = 2,
+  align = "hv",
+  rel_widths = c(1, 1)
+)
 
+bottom <- cowplot::plot_grid(
+  plots[["1995"]],
+  ncol = 2,
+  align = "hv",
+  rel_widths = c(1, 1)
+)
 
+cowplot::plot_grid(top, bottom, ncol = 1, rel_heights = c(1, 1.05))
 ```
-
-```{r clean, message=FALSE, warning=FALSE, include=FALSE}
-rm(bottom, top, combined, match_model, plots)
-```
-
 
 # Regression
 
-To assess treatment effects, we fit progressively richer models (no FE, UF×year FE, and FE + controls) using the matched sample.
+To assess treatment effects, I estimate progressively richer weighted OLS specifications on the matched sample: a baseline model, a model with UF-by-year fixed effects, and a fixed-effect model with additional controls.
 
-```{r}
-# ---------------------------------------------------------------------------- #
-# 3. Regression -----
-# ---------------------------------------------------------------------------- #
-# Bind matched samples (1992, 1993, 1995) and prepare identifiers
-df_psm <- bind_rows(df_matched_1992, df_matched_1993, df_matched_1995)
+```{r regression}
+df_psm <- match_results %>%
+  map("matched_data") %>%
+  bind_rows() %>%
+  mutate(
+    ano = relevel(factor(ano), ref = "1992"),
+    uf_ano = interaction(uf, ano, sep = "_")
+  )
 
-df_psm$ano   <- factor(df_psm$ano)        # ensure year is a factor
-df_psm$ano   <- relevel(df_psm$ano, ref = "1992")   # reference year = 1992
-df_psm$uf_ano <- interaction(df_psm$uf, df_psm$ano, sep = "_")  # UF × year FE key
-
-
-# --- Model 1: no fixed effects (year-to-year comparison via i())
 model_nc <- feols(
   anos_estudo ~ treatment + i(ano, treatment, ref = "1992"),
-  data = df_psm, weights = df_psm$weights, vcov = "hetero"
+  data = df_psm,
+  weights = ~weights,
+  vcov = "hetero"
 )
 
-# --- Model 2: add UF×year fixed effects (absorbs geography-by-year shocks)
 model_fe <- feols(
   anos_estudo ~ treatment + i(ano, treatment, ref = "1992") | uf_ano,
-  data = df_psm, weights = df_psm$weights, vcov = "hetero"
+  data = df_psm,
+  weights = ~weights,
+  vcov = "hetero"
 )
 
-# --- Model 3: UF×year FE + basic controls
 model_cc <- feols(
   anos_estudo ~ treatment + i(ano, treatment, ref = "1992") +
     total_filhos + cor + age | uf_ano,
-  data = df_psm, weights = df_psm$weights, vcov = "hetero"
+  data = df_psm,
+  weights = ~weights,
+  vcov = "hetero"
 )
 ```
 
-```{r clean2, message=FALSE, warning=FALSE, include=FALSE}
-rm(df_matched_1992, df_matched_1993, df_matched_1995, matched_data)
-```
-
-
-```{r Output, results='asis'}
+```{r output, results='asis'}
 fixest::etable(
-  tex = T,
-  list("No FE" = model_nc, "UF×Year FE" = model_fe, "FE + Controls" = model_cc),
-  drop     = "Constant",
+  list("No FE" = model_nc, "UF x Year FE" = model_fe, "FE + Controls" = model_cc),
+  tex = TRUE,
+  drop = "Constant",
   dict = c(
-    "anos_estudo"                    = "Years of education",
-    "treatment$"                     = "Treatment (1992)",
-    "i\\(ano, treatment.*\\)::1993"  = "Treatment × 1993",
-    "i\\(ano, treatment.*\\)::1995"  = "Treatment × 1995",
-    "age"                            = "Age",
-    "cor"                            = "Race/Color",
-    "total_filhos"                   = "Total children",
-    "treatment x ano = 1993"         = "Treatment × 1993",
-    "treatment x ano = 1995"         = "Treatment × 1995"
+    "anos_estudo" = "Years of education",
+    "treatment$" = "Treatment (1992)",
+    "i\\(ano, treatment.*\\)::1993" = "Treatment x 1993",
+    "i\\(ano, treatment.*\\)::1995" = "Treatment x 1995",
+    "age" = "Age",
+    "cor" = "Race/Color",
+    "total_filhos" = "Total children",
+    "treatment x ano = 1993" = "Treatment x 1993",
+    "treatment x ano = 1995" = "Treatment x 1995"
   ),
-  se.below   = TRUE,
-  signif.code = "letters",     
-  digits     = 3,
-  fitstat    = c("n","r2","rmse"),
-  title      = "ATT by Year (ref = 1992)",
-  notes      = "SEs are heteroskedastic-robust. Weights from matching sample."
+  se.below = TRUE,
+  signif.code = "letters",
+  digits = 3,
+  fitstat = c("n", "r2", "rmse"),
+  title = "Treatment Effects by Year (reference year = 1992)",
+  notes = "SEs are heteroskedasticity-robust. Regression weights are inherited from the matched sample."
 )
-
 ```
 
-There is no statistically significant effect of alimony eligibility on the years of education among young women. However, the low R² values indicate limited explanatory power, these specifications explain only a small share of the variation in schooling outcomes, so the results should be interpreted with caution. 
+The estimates do not provide evidence of a statistically significant effect of alimony eligibility on young women's years of education. Because the models explain only a small share of variation in schooling outcomes, the results should be interpreted as a compact empirical exercise rather than a definitive causal estimate.

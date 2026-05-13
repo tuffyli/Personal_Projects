@@ -1,303 +1,246 @@
 # ---------------------------------------------------------------------------- #
-# Combined DrDiD Estimators
+# PNAD data preparation for the alimony rights exercise
 # Last edited by: Tuffy Licciardi Issa
-# Date: 25/10/2025
+# Date: 2026-05-13
 # ---------------------------------------------------------------------------- #
 
-library(dplyr);
-library(here);
-library(tidyverse);
-library(stargazer);
-library(MatchIt);
-library(broom);
-library(kableExtra);
-library(cobalt);
-library(cowplot);
-library(fixest)
+library(dplyr)
+
+project_dir <- normalizePath(
+  if (dir.exists("data") && dir.exists("code")) {
+    "."
+  } else if (dir.exists(file.path("..", "data")) && dir.exists(file.path("..", "code"))) {
+    ".."
+  } else {
+    stop("Run this script from the PNAD-exercise folder or its code subfolder.")
+  },
+  winslash = "/"
+)
+
+project_path <- function(...) file.path(project_dir, ...)
+
 # ---------------------------------------------------------------------------- #
-#1. Data Open ----
+# Data paths
 # ---------------------------------------------------------------------------- #
 
-data <- data %>%
-  group_by(ID_DOMICILIO) %>%
-  
-  mutate(
-    num_moradores = n(),
-    
-    renda_dom_pc = case_when(
-      # Condition 1: If household income (v4614) is NA or an "ignored" code,
-      # set per-capita income to NA.
-      is.na(first(v4614)) | first(v4614) == 999999999999 ~ NA,
-      
-      # Condition 2: If the number of residents is greater than 0 (valid case),
-      # compute per-capita income.
-      num_moradores > 0 ~ first(v4614) / num_moradores,
-      
-      # Condition 3: Fallback — set to 0 to avoid errors in edge cases.
-      TRUE ~ 0
+# Optional raw PNAD file. This file is not included in the repository.
+# To rebuild the analysis data from raw microdata, either:
+# 1. place the raw file at this path, or
+# 2. load the raw PNAD data into a data frame named `data` before sourcing this file.
+raw_data_path <- project_path("data", "pnad_raw_9295.rds")
+
+# Included/intermediate files used by the public code sample.
+filtered_data_path <- project_path("data", "Pnadpnad_filtered_9295.rds")
+final_data_path <- project_path("data", "final_filtered_9295.rds")
+summary_path <- project_path("data", "summary.rds")
+
+# ---------------------------------------------------------------------------- #
+# 1. Variable selection
+# ---------------------------------------------------------------------------- #
+
+is_raw_pnad <- function(x) {
+  is.data.frame(x) && all(c("ID_DOMICILIO", "v0101", "v4614") %in% names(x))
+}
+
+has_raw_data_object <- exists("data", envir = .GlobalEnv, inherits = FALSE) &&
+  is_raw_pnad(get("data", envir = .GlobalEnv))
+
+if (has_raw_data_object || file.exists(raw_data_path)) {
+  raw_data <- if (has_raw_data_object) {
+    get("data", envir = .GlobalEnv)
+  } else {
+    readRDS(raw_data_path)
+  }
+
+  if (!is_raw_pnad(raw_data)) {
+    stop(
+      "`pnad_raw_9295.rds` does not have the expected raw PNAD columns. ",
+      "Expected at least ID_DOMICILIO, v0101, and v4614."
     )
-  ) %>%
-    ungroup()
+  }
 
-# ---------------------- #
-##1.1 Filter -----
-# ---------------------- #
+  filtered_data <- raw_data %>%
+    group_by(ID_DOMICILIO) %>%
+    mutate(
+      num_moradores = n(),
+      renda_dom_pc = case_when(
+        is.na(first(v4614)) | first(v4614) == 999999999999 ~ NA_real_,
+        num_moradores > 0 ~ first(v4614) / num_moradores,
+        TRUE ~ NA_real_
+      )
+    ) %>%
+    ungroup() %>%
+    select(
+      v0101, uf, v0102, v0103, v0301, v0302, ID_DOMICILIO,
+      v8005, v0401, v0404,
+      v0607, v0610, v0602, v0603, v4703,
+      v9001, v0713, v7122, v7125, v7127, v7128, v1254,
+      v4721, v4614, renda_dom_pc,
+      v9906, v9907, v0701,
+      v1141, v1142, v1151, v1152,
+      v4723, v0501,
+      v4729, any_of("treatment"),
+      v1001, v1002, v0402
+    ) %>%
+    rename(
+      ano = v0101,
+      id_domicilio = ID_DOMICILIO,
+      num_controle_dom = v0102,
+      num_serie_dom = v0103,
+      num_ordem_morador = v0301,
+      age = v8005,
+      sex = v0302,
+      condicao_no_dom = v0401,
+      cor = v0404,
+      curso_mais_elevado = v0607,
+      ultima_serie_concluida = v0610,
+      frequenta_escola = v0602,
+      tipo_curso_frequenta = v0603,
+      anos_estudo = v4703,
+      trabalhou_semana_ref = v9001,
+      horas_trabalhadas = v0713,
+      renda_trab_dinheiro = v7122,
+      renda_trab_produto = v7125,
+      cod_renda_beneficio = v7127,
+      indicador_nao_remunerado = v7128,
+      pensao = v1254,
+      renda_dom_total = v4721,
+      renda_dom_total_v2 = v4614,
+      renda_dom_per_capita = renda_dom_pc,
+      trabalhou_ultimo_ano = v0701,
+      cod_ocupacao = v9906,
+      cod_atividade = v9907,
+      filhos_homens_dom = v1141,
+      filhos_mulheres_dom = v1142,
+      filhos_homens_outrolocal = v1151,
+      filhos_mulheres_outrolocal = v1152,
+      tipo_familia = v4723,
+      nasceu_no_municipio = v0501,
+      house_status = v0402,
+      union_cond = v1002,
+      union_status = v1001,
+      peso_pessoa = v4729
+    )
 
-
-
-temp <- data %>% 
-  #filter(!is.na(treatment)) %>% 
-  select(
-    # --- Identificação ---
-    v0101,            # Ano de referência
-    uf,               # Unidade da Federação
-    v0102,            # Número de controle do domicílio
-    v0103,            # Número de série do domicílio
-    v0301,            # Número de ordem do morador
-    v0302,            # Sexo
-    ID_DOMICILIO,     # Identificador único do domicílio
-    
-    # --- Demográficas ---
-    v8005,            # Idade
-    v0401,            # Condição na unidade domiciliar
-    v0404,            # Cor/Raça
-    
-    # --- Educação ---
-    v0607,            # Curso mais elevado que frequentou
-    v0610,            # Última série concluída
-    v0602,            # Frequenta escola ou creche
-    v0603,            # Curso que frequenta
-    v4703,            # Anos de estudo
-    
-    # --- Trabalho e Rendimento ---
-    v9001,            # Trabalhou na semana de referência
-    v0713,            # Horas trabalhadas normalmente por semana (para crianças 5-9 anos)
-    v7122,            # Rendimento mensal em dinheiro do trabalho
-    v7125,            # Rendimento mensal em produtos/mercadorias do trabalho
-    v7127,            # Código de rendimento em benefícios
-    v7128,            # Indicador de trabalho não remunerado
-    v1254,            # Código de rendimento de pensão
-    v4721,            # Valor do rendimento mensal domiciliar
-    v4614,            # Rendimento mensal domiciliar (do arquivo de domicílio)
-    renda_dom_pc,     # Sua variável já criada de renda domiciliar per capita
-    
-    # --- Ocupação ---
-    v9906,            # Código da ocupação
-    v9907,            # Código da atividade principal
-    v0701,            # Trabalhou no último ano
-    
-    # --- Fecundidade (Nº de filhos da mulher) ---
-    v1141,            # Nº de filhos homens no domicílio
-    v1142,            # Nº de filhos mulheres no domicílio
-    v1151,            # Nº de filhos homens em outro local
-    v1152,            # Nº de filhos mulheres em outro local
-    
-    # --- Família e Migração ---
-    v4723,            # Tipo de família
-    v0501,            # Nasceu neste município
-    
-    # --- Variáveis de controle/peso ---
-    v4729,            # Peso da pessoa
-    treatment,
-    
-    # --- Union and Household ---
-    v1001,
-    v1002,
-    v0402
-    
-  ) %>% 
-  rename(
-    # --- Identificação ---
-    ano = v0101,
-    uf = uf,
-    id_domicilio = ID_DOMICILIO,
-    num_controle_dom = v0102,
-    num_serie_dom = v0103,
-    num_ordem_morador = v0301,
-    
-    # --- Demográficas ---
-    age = v8005,
-    sex = v0302,
-    condicao_no_dom = v0401,  # Condição na unidade domiciliar 
-    cor = v0404,
-    
-    # --- Educação ---
-    curso_mais_elevado = v0607, # Curso mais elevado que frequentou 
-    ultima_serie_concluida = v0610, # Última série concluída neste curso que frequentou 
-    frequenta_escola = v0602, # Frequenta escola ou creche 
-    tipo_curso_frequenta = v0603, # Qual o curso que frequenta 
-    anos_estudo = v4703, # Anos de estudo 
-    
-    # --- Trabalho e Rendimento ---
-    trabalhou_semana_ref = v9001, # Trabalhou na semana de 24 a 30/09/95 
-    horas_trabalhadas = v0713, # Quantas horas trabalhava normalmente na semana 
-    renda_trab_dinheiro = v7122, # Valor de rendimento mensal em dinheiro (no trabalho da semana) 
-    renda_trab_produto = v7125, # Valor de rendimento mensal em produtos ou mercadorias 
-    cod_renda_beneficio = v7127, # Código_6 de rendimento mensal em beneficios 
-    indicador_nao_remunerado = v7128, # Código 8 de não remunerado 
-    pensao = v1254, # Código 2 de rendimento de pensão 
-    renda_dom_total = v4721, # Valor do rendimento mensal domiciliar 
-    renda_dom_total_v2 = v4614, # Rendimento mensal domiciliar' 
-    renda_dom_per_capita = renda_dom_pc,
-    
-    # --- Ocupação ---
-    trabalhou_ultimo_ano = v0701,
-    cod_ocupacao = v9906, # Código da ocupação que exercia no trabalho 
-    cod_atividade = v9907, # Código da atividade principal do Emprendimento 
-    
-    # --- Fecundidade ---
-    filhos_homens_dom = v1141, # Número de filhos - Homens que moram neste domicilio 
-    filhos_mulheres_dom = v1142, # Número de filhos - Mulheres que moram neste domicilio 
-    filhos_homens_outrolocal = v1151, # Número de filhos Homens que moram em outro local 
-    filhos_mulheres_outrolocal = v1152, # Número de filhos - Mulheres que moram em outro local 
-    
-    # --- Família e Migração ---
-    tipo_familia = v4723, # Tipo de familia 
-    nasceu_no_municipio = v0501, # Nasceu neste municipio 
-    house_status = v0402,
-    union_cond = v1002,
-    union_status = v1001,
-    
-    # --- Variáveis de controle/peso ---
-    peso_pessoa = v4729 # Peso da pessoa 
-  )
-
-
-saveRDS(temp %>% select(-treatment), "C:/Users/tuffy/Documents/Trabalhos/Ava_Pol/Bases/Pnadpnad_filtered_9295.rds")
-
-
-# ---------------------------------------------------------------------------- #
-# 2. Data Adjustment ----
-# ---------------------------------------------------------------------------- #
-
-data <- readRDS("C:/Users/tuffy/Documents/Trabalhos/Ava_Pol/Bases/Pnadpnad_filtered_9295.rds")
-
-## 3.1 Treatment Def ----
-#To define treatment status
-
-data <- data %>% 
-  mutate(
-    treatment = case_when(
-      # Treatment (= 1)
-      sex == 4 &                               # Female
-        (age >= 15 & age <= 24) &                # Age between 15 e 24
-        union_status == 1 &                      # In Union
-        (union_cond == 8 | union_cond == 6) &    # Consesual (8) OR Religious (6)
-        (house_status == 1 | house_status == 2)  # Family Household status Head (1) ou Wife (2)
-      ~ 1,
-      
-      # Control Group (= 0)
-      sex == 4 &                               # Female
-        (age >= 15 & age <= 24) &                # Age between 15 e 24
-        union_status == 1 &                      # In Union
-        (union_cond == 2 | union_cond == 4)  &   # Rligious and Civil (2) OR Civil (4)
-        (house_status == 1 | house_status == 2)  # Family Household status Head (1) ou Wife (2)
-      ~ 0,
-      #Other cases
-      TRUE ~ NA_integer_
-    ),
-    
-    #Other controls
-    cor = case_when(       #Race/Color
-      cor %in% c(2,6) ~ 1, #Asian and White 
-      cor == 9 ~ NA, .default = 0),
-    
-    grupo_cbo = case_when( #Occupation classification
-      !is.na(cod_ocupacao) & cod_ocupacao < 900  ~ cod_ocupacao %/% 100, #Large Groups
-      TRUE ~ NA_real_),
-    
-    ano = ano + 1900, #year
-    trabalhou_ultimo_ano = ifelse(trabalhou_ultimo_ano == 1, 1 , 0), #Worked last year status
-    fem = ifelse(sex == 4, 1, 0), #Is female (=1)
-    
-    pensao_dummy = ifelse(!is.na(pensao), 1, 0), #Recieves alimony
-    #Total sons calculation
-    dummy_filhos_homens_dom = ifelse(!filhos_homens_dom %in% c(-1,99), filhos_homens_dom, 0),
-    dummy_filhos_mulheres_dom = ifelse(!filhos_mulheres_dom %in% c(-1,99), filhos_mulheres_dom, 0),
-    dummy_filhos_homens_outrolocal = ifelse(!filhos_homens_outrolocal %in% c(-1,99), filhos_homens_outrolocal, 0),
-    dummy_filhos_mulheres_outrolocal = ifelse(!filhos_mulheres_outrolocal %in% c(-1,99), filhos_mulheres_outrolocal, 0),
-    #Total kids per woman
-    total_filhos = dummy_filhos_homens_dom + dummy_filhos_mulheres_dom + dummy_filhos_homens_outrolocal + dummy_filhos_mulheres_outrolocal
-  ) %>%
-  filter(!is.na(treatment)) #removing other groups
-
-
-# ---------------------------------------------------------------------------- #
-# 3. Data Summary ----
-# ---------------------------------------------------------------------------- #
-
-#3.1 Data extraction
-summary_df <- data %>%
-  select(
-    treatment,                    # Treatment indicator (0/1)
-    fem,                          # Female (=1)
-    cor,                          # Race/Color (per your coding)
-    age,                          # Age
-    anos_estudo,                  # Years of education
-    ultima_serie_concluida,       # Last grade completed
-    tipo_curso_frequenta,         # Course enrollment/type
-    renda_dom_per_capita,         # Household per-capita income
-    pensao_dummy,                 # Alimony/Pension (=1)
-    grupo_cbo,                    # CBO/occupation group
-    #trabalhou_ultimo_ano,        # Worked last year (=1) [optional]
-    dummy_filhos_homens_dom,      # Male children in household
-    dummy_filhos_mulheres_dom,    # Female children in household
-    total_filhos,                 # Total children
-    peso_pessoa                   # Sampling weight
-  ) %>%
-  mutate(across(everything(), ~ as.numeric(as.character(.))))  # Coerce to numeric for summary stats
-
-
-weighted_stats <- function(x, w) {
-  w <- w[!is.na(x)]                       # Keep weights where x is not NA
-  x <- x[!is.na(x)]                       # Drop NA values in x
-  w_mean <- weighted.mean(x, w)           # Weighted mean
-  w_var <- sum(w * (x - w_mean)^2) / sum(w)  # Population-weighted variance
-  w_sd <- sqrt(w_var)                     # Weighted SD
-  list(
-    mean = w_mean,
-    sd = w_sd,
-    min = min(x),                         # Minimum (unweighted)
-    max = max(x)                          # Maximum (unweighted)
+  saveRDS(filtered_data %>% select(-any_of("treatment")), filtered_data_path)
+} else if (file.exists(filtered_data_path)) {
+  filtered_data <- readRDS(filtered_data_path)
+} else {
+  stop(
+    "No PNAD input was found. Load the raw PNAD data into an object named ",
+    "`data`, place `pnad_raw_9295.rds` in the data folder, or keep ",
+    "`Pnadpnad_filtered_9295.rds` in the data folder."
   )
 }
 
-vars <- c("treatment","fem", "cor", "curso_mais_elevado", "age", "anos_estudo", "ultima_serie_concluida",
-          "tipo_curso_frequenta", "renda_dom_per_capita", "pensao_dummy", "grupo_cbo",
-          "dummy_filhos_homens_dom", "dummy_filhos_mulheres_dom", "total_filhos")
+# ---------------------------------------------------------------------------- #
+# 2. Treatment definition and analysis variables
+# ---------------------------------------------------------------------------- #
 
-# Appling the function
-summary_table <- lapply(vars, function(v) {
-  res <- weighted_stats(data[[v]], data$peso_pessoa)
-  data.frame(
-    Variable = v,
-    Mean = res[["mean"]],
-    SD   = res[["sd"]],
-    Min  = res[["min"]],
-    Max  = res[["max"]])
-}) %>% bind_rows() %>%  #Stacks the results into a single data frame  
-  select(-Variable) #Drops the variable
+analysis_data <- filtered_data %>%
+  select(-any_of("treatment")) %>%
+  mutate(
+    treatment = case_when(
+      sex == 4 &
+        between(age, 15, 24) &
+        union_status == 1 &
+        union_cond %in% c(6, 8) &
+        house_status %in% c(1, 2) ~ 1L,
+      sex == 4 &
+        between(age, 15, 24) &
+        union_status == 1 &
+        union_cond %in% c(2, 4) &
+        house_status %in% c(1, 2) ~ 0L,
+      TRUE ~ NA_integer_
+    ),
+    cor = case_when(
+      cor %in% c(2, 6) ~ 1,
+      cor == 9 ~ NA_real_,
+      TRUE ~ 0
+    ),
+    grupo_cbo = case_when(
+      !is.na(cod_ocupacao) & cod_ocupacao < 900 ~ cod_ocupacao %/% 100,
+      TRUE ~ NA_real_
+    ),
+    ano = ano + 1900,
+    trabalhou_ultimo_ano = if_else(trabalhou_ultimo_ano == 1, 1, 0),
+    fem = if_else(sex == 4, 1, 0),
+    pensao_dummy = if_else(!is.na(pensao), 1, 0),
+    dummy_filhos_homens_dom = if_else(
+      !filhos_homens_dom %in% c(-1, 99),
+      filhos_homens_dom,
+      0
+    ),
+    dummy_filhos_mulheres_dom = if_else(
+      !filhos_mulheres_dom %in% c(-1, 99),
+      filhos_mulheres_dom,
+      0
+    ),
+    dummy_filhos_homens_outrolocal = if_else(
+      !filhos_homens_outrolocal %in% c(-1, 99),
+      filhos_homens_outrolocal,
+      0
+    ),
+    dummy_filhos_mulheres_outrolocal = if_else(
+      !filhos_mulheres_outrolocal %in% c(-1, 99),
+      filhos_mulheres_outrolocal,
+      0
+    ),
+    total_filhos = dummy_filhos_homens_dom + dummy_filhos_mulheres_dom +
+      dummy_filhos_homens_outrolocal + dummy_filhos_mulheres_outrolocal
+  ) %>%
+  filter(!is.na(treatment))
 
-#Column and row Labels
-col <- c( "Mean", "SD", "Min", "Max")
-row <- c("Treatment","Female = 1",
-         "Race (White or Asian = 1)",
-         "Highest Education",
-         "Age",
-         "Years of education",
-         "Last grade concluded",
-         "Course enrollment",
-         "Household per capita wage",
-         "Pension (yes = 1)",
-         "CBO Group",
-         "Male child (house)",
-         "Female child (house)",
-         "Total childs")
-colnames(summary_table) <- col
-rownames(summary_table) <- row
+# ---------------------------------------------------------------------------- #
+# 3. Weighted descriptive statistics
+# ---------------------------------------------------------------------------- #
 
+weighted_stats <- function(x, w) {
+  valid <- !is.na(x) & !is.na(w)
+  x <- as.numeric(x[valid])
+  w <- as.numeric(w[valid])
 
-print(summary_table <- summary_table %>% mutate(across(where(is.numeric), ~ round(.x, 2)))) 
+  if (length(x) == 0) {
+    return(c(mean = NA_real_, sd = NA_real_, min = NA_real_, max = NA_real_))
+  }
 
-saveRDS(summary_table, "C:/Users/tuffy/Documents/Trabalhos/Ava_Pol/Bases/summary.rds")
-saveRDS(data,"C:/Users/tuffy/Documents/Trabalhos/Ava_Pol/Bases/final_filtered_9295.rds")
+  w_mean <- weighted.mean(x, w)
+  w_sd <- sqrt(sum(w * (x - w_mean)^2) / sum(w))
+
+  c(
+    mean = w_mean,
+    sd = w_sd,
+    min = min(x),
+    max = max(x)
+  )
+}
+
+summary_vars <- c(
+  "treatment", "fem", "cor", "curso_mais_elevado", "age", "anos_estudo",
+  "ultima_serie_concluida", "tipo_curso_frequenta", "renda_dom_per_capita",
+  "pensao_dummy", "grupo_cbo", "dummy_filhos_homens_dom",
+  "dummy_filhos_mulheres_dom", "total_filhos"
+)
+
+summary_labels <- c(
+  "Treatment", "Female = 1", "Race (White or Asian = 1)",
+  "Highest education", "Age", "Years of education",
+  "Last grade completed", "Course enrollment",
+  "Household per-capita income", "Pension/alimony receipt = 1",
+  "CBO group", "Male children in household",
+  "Female children in household", "Total children"
+)
+
+summary_table <- do.call(rbind, lapply(summary_vars, function(variable) {
+  weighted_stats(analysis_data[[variable]], analysis_data$peso_pessoa)
+})) %>%
+  as.data.frame() %>%
+  mutate(across(everything(), ~ round(.x, 2))) %>%
+  setNames(c("Mean", "SD", "Min", "Max"))
+
+rownames(summary_table) <- summary_labels
+
+print(summary_table)
+
+saveRDS(summary_table, summary_path)
+saveRDS(analysis_data, final_data_path)
