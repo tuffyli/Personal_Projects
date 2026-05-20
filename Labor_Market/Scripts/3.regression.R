@@ -1001,8 +1001,18 @@ est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
 
+att <- est_calsan_sc1$overall.att
+se  <- est_calsan_sc1$overall.se
+
+z_value <- att / se
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+
 #Saving in the result table
-result_rais$att_nc[1] <- round(est_calsan_sc1$overall.att, digits = 4) #ATT
+result_rais$att_nc[1] <- paste0(round(att, 4), stars)
 result_rais$att_nc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
 # ---------------------------------------------------------------------------- #
@@ -1023,10 +1033,20 @@ w_control <- did::att_gt(
 
 est_calsan_sc1 <- aggte( MP = w_control, type = "dynamic", na.rm = TRUE)
 
+#Saving values
+att <- est_calsan_sc1$overall.att
+se  <- est_calsan_sc1$overall.se
 
+z_value <- att / se
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
 
-result_rais$att_fc[1] <- round(est_calsan_sc1$overall.att, digits = 4) #ATT
-result_rais$att_fc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]")
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+
+#Saving in the result table
+result_rais$att_fc[1] <- paste0(round(att, 4), stars)
+result_rais$att_fc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
 rm(w_control)
 
@@ -1057,10 +1077,20 @@ est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
 
-#Saving in the result table
-result_cbo$att_nc[1] <- round(est_calsan_sc1$overall.att, digits = 4) #ATT
-result_cbo$att_nc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
+#Saving values
+att <- est_calsan_sc1$overall.att
+se  <- est_calsan_sc1$overall.se
 
+z_value <- att / se
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+
+#Saving in the result table
+result_cbo$att_nc[1] <- paste0(round(att, 4), stars)
+result_cbo$att_nc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
 
 # ---------------------------------------------------------------------------- #
@@ -1089,9 +1119,21 @@ est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
 
+#Saving values
+att <- est_calsan_sc1$overall.att
+se  <- est_calsan_sc1$overall.se
+
+z_value <- att / se
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+
 #Saving in the result table
-result_cnae$att_nc[1] <- round(est_calsan_sc1$overall.att, digits = 4) #ATT
+result_cnae$att_nc[1] <- paste0(round(att, 4), stars)
 result_cnae$att_nc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
+
 
 # ---------------------------------------------------------------------------- #
 ## 6.4 Salary ----
@@ -1213,8 +1255,19 @@ est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
 
+#Saving values
+att <- est_calsan_sc1$overall.att
+se  <- est_calsan_sc1$overall.se
+
+z_value <- att / se
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+
 #Saving in the result table
-result_rais$att_bc[1] <- round(est_calsan_sc1$overall.att, digits = 4) #ATT
+result_rais$att_bc[1] <- paste0(round(att, 4), stars)
 result_rais$att_bc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
 
@@ -1240,8 +1293,19 @@ est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
 
+#Saving values
+att <- est_calsan_sc1$overall.att
+se  <- est_calsan_sc1$overall.se
+
+z_value <- att / se
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+
 #Saving in the result table
-result_cbo$att_bc[1] <- round(est_calsan_sc1$overall.att, digits = 4) #ATT
+result_cbo$att_bc[1] <- paste0(round(att, 4), stars)
 result_cbo$att_bc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
 
@@ -1268,8 +1332,19 @@ est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
 
+#Saving values
+att <- est_calsan_sc1$overall.att
+se  <- est_calsan_sc1$overall.se
+
+z_value <- att / se
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+
 #Saving in the result table
-result_cnae$att_bc[1] <- est_calsan_sc1$overall.att #ATT
+result_cnae$att_bc[1] <- paste0(round(att, 4), stars)
 result_cnae$att_bc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
 # ----------------------------------------------------------------------------- #
@@ -1346,14 +1421,25 @@ est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
 
-#Saving in the result table
-result_rais$att_wc[1] <- est_calsan_sc1$overall.att #ATT
-result_rais$att_wc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
+#Saving values
+att <- est_calsan_sc1$overall.att
+se  <- est_calsan_sc1$overall.se
 
+z_value <- att / se
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+
+#Saving in the result table
+result_rais$att_wc[1] <- paste0(round(att, 4), stars)
+result_rais$att_wc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
 # ---------------------------------------------------------------------------- #
 ### 6.6.2 CBO WC ----
 # ----------------------------------------------------------------------------- #
+
 no_control <- did::att_gt(
   yname = "dummy_cbo",
   gname = "year_first_treated",
@@ -1372,8 +1458,19 @@ est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
 
+#Saving values
+att <- est_calsan_sc1$overall.att
+se  <- est_calsan_sc1$overall.se
+
+z_value <- att / se
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+
 #Saving in the result table
-result_cbo$att_wc[1] <- est_calsan_sc1$overall.att #ATT
+result_cbo$att_wc[1] <- paste0(round(att, 4), stars)
 result_cbo$att_wc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
 
@@ -1400,8 +1497,19 @@ est_calsan_scs <- aggte( MP = no_control, type = "simple", na.rm = T)
 print(est_calsan_sc1)
 print(est_calsan_scs)
 
+#Saving values
+att <- est_calsan_sc1$overall.att
+se  <- est_calsan_sc1$overall.se
+
+z_value <- att / se
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
+
 #Saving in the result table
-result_cnae$att_wc[1] <- est_calsan_sc1$overall.att #ATT
+result_cnae$att_wc[1] <- paste0(round(att, 4), stars)
 result_cnae$att_wc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
 # ----------------------------------------------------------------------------- #
@@ -1504,14 +1612,17 @@ se_equal  <- sqrt(var_equal)
 var_equal  # "remove sqrt" -> this is what you want if you only want the value without sqrt
 se_equal   # optional: the average SE (with sqrt)
 
-
 # Create LaTeX row string
 
-print(pre_av)
-print(se_equal)
+z_value <- pre_av / se_equal
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
 
 #Saving in the result table
-result_rais$att_fc[3] <- pre_av #ATT
+result_rais$att_fc[3] <- paste0(round(pre_av, 4), stars) #ATT
 result_rais$att_fc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
 # ---------------------------------------------------------------------------- #
@@ -1565,19 +1676,24 @@ var_equal  # "remove sqrt" -> this is what you want if you only want the value w
 se_equal   # optional: the average SE (with sqrt)
 
 
-
 # Create LaTeX row string
 
-print(pre_av)
-print(se_equal)
+z_value <- pre_av / se_equal
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
 
 #Saving in the result table
-result_rais$att_nc[3] <- pre_av #ATT
+result_rais$att_nc[3] <- paste0(round(pre_av, 4), stars) #ATT
 result_rais$att_nc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
+
 
 # ---------------------------------------------------------------------------- #
 ## 7.2 CBO ----
 ### 7.2.1 With Controls -----
+# ---------------------------------------------------------------------------- #
 
 #CBO - Controles
 pre_avg <- did::att_gt(
@@ -1626,18 +1742,24 @@ var_equal  # "remove sqrt" -> this is what you want if you only want the value w
 se_equal   # optional: the average SE (with sqrt)
 
 
-
 # Create LaTeX row string
-print(pre_av)
-print(se_equal)
+
+z_value <- pre_av / se_equal
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
 
 #Saving in the result table
-result_cbo$att_fc[3] <- pre_av #ATT
+result_cbo$att_fc[3] <- paste0(round(pre_av, 4), stars) #ATT
 result_cbo$att_fc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
+
 
 
 # ---------------------------------------------------------------------------- #
 ### 7.2.2 No Controls -----
+# ---------------------------------------------------------------------------- #
 
 #CBO - Sem Controles
 pre_avg <- did::att_gt(
@@ -1684,22 +1806,24 @@ se_equal  <- sqrt(var_equal)
 var_equal  # "remove sqrt" -> this is what you want if you only want the value without sqrt
 se_equal   # optional: the average SE (with sqrt)
 
-
-
 # Create LaTeX row string
 
-print(pre_av)
-print(se_equal)
+z_value <- pre_av / se_equal
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
 
 #Saving in the result table
-result_cbo$att_nc[3] <- pre_av #ATT
+result_cbo$att_nc[3] <- paste0(round(pre_av, 4), stars) #ATT
 result_cbo$att_nc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
 
 # ---------------------------------------------------------------------------- #
 ## 7.3 CNAE ----
 ### 7.3.1 With Controls -----
-
+# ---------------------------------------------------------------------------- #
 
 #CNAE - Controles
 pre_avg <- did::att_gt(
@@ -1748,19 +1872,21 @@ var_equal  # "remove sqrt" -> this is what you want if you only want the value w
 se_equal   # optional: the average SE (with sqrt)
 
 
+#Creating the variable for the LaTeX row string
+z_value <- pre_av / se_equal
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
 
-# Create LaTeX row string
-
-print(pre_av)
-print(se_equal)
-
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
 
 #Saving in the result table
-result_cnae$att_fc[3] <- pre_av #ATT
+result_cnae$att_fc[3] <- paste0(round(pre_av, 4), stars) #ATT
 result_cnae$att_fc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
 # ---------------------------------------------------------------------------- #
 ### 7.3.2 No Controls ----
+# ---------------------------------------------------------------------------- #
 
 #CNAE - Sem Controles
 pre_avg <- did::att_gt(
@@ -1810,12 +1936,17 @@ se_equal   # optional: the average SE (with sqrt)
 
 
 # Create LaTeX row string
-print(pre_av)
-print(se_equal)
+z_value <- pre_av / se_equal
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
 
 #Saving in the result table
-result_cnae$att_nc[3] <- pre_av #ATT
+result_cnae$att_nc[3] <- paste0(round(pre_av, 4), stars) #ATT
 result_cnae$att_nc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
+
 
 # ----------------------------------------------------------------------------- #
 ## 7.4 Salary ----
@@ -1959,6 +2090,7 @@ rm(pre_av, se_equal, z_value, p_value, stars)
 # ---------------------------------------------------------------------------- #
 ## 7.4 Blue Collar ----
 ### 7.4.1 RAIS ----
+# ---------------------------------------------------------------------------- #
 
 #RAIS - Controles
 pre_avg <- did::att_gt(
@@ -2009,16 +2141,20 @@ se_equal   # optional: the average SE (with sqrt)
 
 
 # Create LaTeX row string
+z_value <- pre_av / se_equal
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
 
-print(pre_av)
-print(se_equal)
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
 
 #Saving in the result table
-result_rais$att_bc[3] <- pre_av #ATT
+result_rais$att_bc[3] <- paste0(round(pre_av, 4), stars) #ATT
 result_rais$att_bc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
 # ---------------------------------------------------------------------------- #
 ### 7.4.2 CBO ----
+# ---------------------------------------------------------------------------- #
 
 #CBO - Controles
 pre_avg <- did::att_gt(
@@ -2069,17 +2205,20 @@ se_equal   # optional: the average SE (with sqrt)
 
 
 # Create LaTeX row string
+z_value <- pre_av / se_equal
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
 
-print(pre_av)
-print(se_equal)
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
 
 #Saving in the result table
-result_cbo$att_bc[3] <- pre_av #ATT
+result_cbo$att_bc[3] <- paste0(round(pre_av, 4), stars) #ATT
 result_cbo$att_bc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
-
 
 # ---------------------------------------------------------------------------- #
 ### 7.4.3 CNAE ----
+# ---------------------------------------------------------------------------- #
 
 #CNAE - Controles
 pre_avg <- did::att_gt(
@@ -2127,14 +2266,16 @@ var_equal  # "remove sqrt" -> this is what you want if you only want the value w
 se_equal   # optional: the average SE (with sqrt)
 
 
-
 # Create LaTeX row string
+z_value <- pre_av / se_equal
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
 
-print(pre_av)
-print(se_equal)
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
 
 #Saving in the result table
-result_cnae$att_bc[3] <- pre_av #ATT
+result_cnae$att_bc[3] <- paste0(round(pre_av, 4), stars) #ATT
 result_cnae$att_bc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
 # ---------------------------------------------------------------------------- #
@@ -2194,9 +2335,10 @@ rm(pre_av, se_equal, z_value, p_value, stars)
 # ---------------------------------------------------------------------------- #
 ## 7.5 White Collar ----
 # ---------------------------------------------------------------------------- #
-
-
 ### 7.5.1 RAIS ----
+# ---------------------------------------------------------------------------- #
+
+
 pre_avg <- did::att_gt(
   yname = "rais_",
   gname = "year_first_treated",
@@ -2245,16 +2387,21 @@ se_equal   # optional: the average SE (with sqrt)
 
 
 # Create LaTeX row string
-print(pre_av)
-print(se_equal)
+z_value <- pre_av / se_equal
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
 
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
 
 #Saving in the result table
-result_rais$att_wc[3] <- pre_av #ATT
+result_rais$att_wc[3] <- paste0(round(pre_av, 4), stars) #ATT
 result_rais$att_wc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
-
+# ---------------------------------------------------------------------------- #
 ### 7.5.2 CBO -----
+# ---------------------------------------------------------------------------- #
+
 pre_avg <- did::att_gt(
   yname = "dummy_cbo",
   gname = "year_first_treated",
@@ -2303,16 +2450,21 @@ se_equal   # optional: the average SE (with sqrt)
 
 
 # Create LaTeX row string
-print(pre_av)
-print(se_equal)
+z_value <- pre_av / se_equal
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
 
 #Saving in the result table
-result_cbo$att_wc[3] <- pre_av #ATT
+result_cbo$att_wc[3] <- paste0(round(pre_av, 4), stars) #ATT
 result_cbo$att_wc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
 # ---------------------------------------------------------------------------- #
 ### 7.5.3 CNAE ----
 # ---------------------------------------------------------------------------- #
+
 pre_avg <- did::att_gt(
   yname = "dummy_cnae",
   gname = "year_first_treated",
@@ -2360,11 +2512,15 @@ se_equal   # optional: the average SE (with sqrt)
 
 
 # Create LaTeX row string
-print(pre_av)
-print(se_equal)
+z_value <- pre_av / se_equal
+p_value <- 2 * pnorm(abs(z_value), lower.tail = FALSE)
+
+stars <- ifelse(p_value < 0.01, "***",
+                ifelse(p_value < 0.05, "**",
+                       ifelse(p_value < 0.10, "*", "")))
 
 #Saving in the result table
-result_cnae$att_wc[3] <- pre_av #ATT
+result_cnae$att_wc[3] <- paste0(round(pre_av, 4), stars) #ATT
 result_cnae$att_wc[4] <- paste0("[",round(se_equal, digits = 4),"]") #SE
 
 # ---------------------------------------------------------------------------- #
