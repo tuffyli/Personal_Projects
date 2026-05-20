@@ -257,10 +257,10 @@ p <- ggplot(est_rais2, aes(x = x, y = y, color = colour, group = group)) +
     axis.ticks = element_line(colour = "black"),  
     axis.ticks.x = element_line(colour = "black"),
     axis.ticks.y = element_line(colour = "black"),
-    axis.text.x = element_text(margin = margin(t = 5), size = 18),
+    axis.text.x = element_text(margin = margin(t = 5), size = 15),
     legend.position = "none",
     
-    axis.text.y = element_text(size = 18)
+    axis.text.y = element_text(size = 15)
   ) +
   scale_x_continuous(
     limits = c(-9.2, 4.5),
@@ -350,10 +350,10 @@ p <- ggplot(estimacoes_cnae, aes(x = x, y = y, color = colour, group = group)) +
     axis.ticks = element_line(colour = "black"),  
     axis.ticks.x = element_line(colour = "black"),
     axis.ticks.y = element_line(colour = "black"),
-    axis.text.x = element_text(margin = margin(t = 5), size = 18),
+    axis.text.x = element_text(margin = margin(t = 5), size = 15),
     legend.position = "none",
     
-    axis.text.y = element_text(size = 18)
+    axis.text.y = element_text(size = 15)
   ) +
   scale_x_continuous(limits = c(-9.2, 5.2),
                      breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
@@ -402,10 +402,10 @@ p <- ggplot(estimacoes_sal %>% #Only Callaway
     axis.ticks = element_line(colour = "black"),  
     axis.ticks.x = element_line(colour = "black"),
     axis.ticks.y = element_line(colour = "black"),
-    axis.text.x = element_text(margin = margin(t = 5), size = 18),
+    axis.text.x = element_text(margin = margin(t = 5), size = 15),
     legend.position = "none",
     
-    axis.text.y = element_text(size = 18)
+    axis.text.y = element_text(size = 15)
   ) +
   scale_x_continuous(
     limits = c(-9.5, 4.5),
@@ -800,8 +800,8 @@ p <- ggplot(both_rais, aes(x = x, y = y, color = colour, group = group)) +
     axis.ticks = element_line(colour = "black"),  
     axis.ticks.x = element_line(colour = "black"),
     axis.ticks.y = element_line(colour = "black"),
-    axis.text.x = element_text(margin = margin(t = 5), size = 18),
-    axis.text.y = element_text(size = 18
+    axis.text.x = element_text(margin = margin(t = 5), size = 15),
+    axis.text.y = element_text(size = 15
     ),
     
     legend.text = element_text(size = 18),
@@ -842,8 +842,8 @@ p <- ggplot(both_cbo, aes(x = x, y = y, color = colour, group = group)) +
     axis.ticks = element_line(colour = "black"),  
     axis.ticks.x = element_line(colour = "black"),
     axis.ticks.y = element_line(colour = "black"),
-    axis.text.x = element_text(margin = margin(t = 5), size = 18),
-    axis.text.y = element_text(size = 18),
+    axis.text.x = element_text(margin = margin(t = 5), size = 15),
+    axis.text.y = element_text(size = 15),
     
     legend.text = element_text(size = 18),
     legend.position = c(0.25, 1.05),         
@@ -884,8 +884,8 @@ p <- ggplot(both_cnae, aes(x = x, y = y, color = colour, group = group)) +
     axis.ticks = element_line(colour = "black"),  
     axis.ticks.x = element_line(colour = "black"),
     axis.ticks.y = element_line(colour = "black"),
-    axis.text.x = element_text(margin = margin(t = 5), size = 18),
-    axis.text.y = element_text(size = 18),
+    axis.text.x = element_text(margin = margin(t = 5), size = 15),
+    axis.text.y = element_text(size = 15),
     
     legend.text = element_text(size = 18),
     legend.position = c(0.25, 1.05),         
@@ -1002,7 +1002,7 @@ print(est_calsan_sc1)
 print(est_calsan_scs)
 
 #Saving in the result table
-result_rais$att_nc[1] <- est_calsan_sc1$overall.att #ATT
+result_rais$att_nc[1] <- round(est_calsan_sc1$overall.att, digits = 4) #ATT
 result_rais$att_nc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
 # ---------------------------------------------------------------------------- #
@@ -1015,7 +1015,7 @@ w_control <- did::att_gt(
   idname = "code_id",
   tname = "ano",
   data = data,
-  xformula = ~ ano_sexo + ano_branco + ano_ensino + code_id, 
+  xformla = ~ ano_sexo + ano_branco + ano_ensino + code_id, 
   control_group = "notyettreated",
   base_period = "universal",
   clustervars = "code_id"
@@ -1025,8 +1025,8 @@ est_calsan_sc1 <- aggte( MP = w_control, type = "dynamic", na.rm = TRUE)
 
 
 
-result_rais$att_fc[1] <- att_calsan
-result_rais$att_fc[2] <- paste0("[",round(att_se, digits = 4),"]")
+result_rais$att_fc[1] <- round(est_calsan_sc1$overall.att, digits = 4) #ATT
+result_rais$att_fc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]")
 
 rm(w_control)
 
@@ -1058,7 +1058,7 @@ print(est_calsan_sc1)
 print(est_calsan_scs)
 
 #Saving in the result table
-result_cbo$att_nc[1] <- est_calsan_sc1$overall.att #ATT
+result_cbo$att_nc[1] <- round(est_calsan_sc1$overall.att, digits = 4) #ATT
 result_cbo$att_nc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
 
@@ -1090,7 +1090,7 @@ print(est_calsan_sc1)
 print(est_calsan_scs)
 
 #Saving in the result table
-result_cnae$att_nc[1] <- est_calsan_sc1$overall.att #ATT
+result_cnae$att_nc[1] <- round(est_calsan_sc1$overall.att, digits = 4) #ATT
 result_cnae$att_nc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
 # ---------------------------------------------------------------------------- #
@@ -1214,7 +1214,7 @@ print(est_calsan_sc1)
 print(est_calsan_scs)
 
 #Saving in the result table
-result_rais$att_bc[1] <- est_calsan_sc1$overall.att #ATT
+result_rais$att_bc[1] <- round(est_calsan_sc1$overall.att, digits = 4) #ATT
 result_rais$att_bc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
 
@@ -1241,7 +1241,7 @@ print(est_calsan_sc1)
 print(est_calsan_scs)
 
 #Saving in the result table
-result_cbo$att_bc[1] <- est_calsan_sc1$overall.att #ATT
+result_cbo$att_bc[1] <- round(est_calsan_sc1$overall.att, digits = 4) #ATT
 result_cbo$att_bc[2] <- paste0("[",round(est_calsan_sc1$overall.se, digits = 4),"]") #SE
 
 
