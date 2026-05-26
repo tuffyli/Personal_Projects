@@ -491,8 +491,8 @@ p <- ggplot(data_final, aes(x = x, y = y, colour = colour, group = grupo)) +
     axis.ticks = element_line(colour = "black"),  
     axis.ticks.x = element_line(colour = "black"),
     axis.ticks.y = element_line(colour = "black"),
-    axis.text.x = element_text(margin = margin(t = 5), size = 18),
-    axis.text.y = element_text(size = 18
+    axis.text.x = element_text(margin = margin(t = 5), size = 15),
+    axis.text.y = element_text(size = 15
     ),
     
     legend.text = element_text(size = 18),
@@ -625,8 +625,8 @@ p <- ggplot(data_final, aes(x = x, y = y, colour = colour, group = grupo)) +
     axis.ticks = element_line(colour = "black"),  
     axis.ticks.x = element_line(colour = "black"),
     axis.ticks.y = element_line(colour = "black"),
-    axis.text.x = element_text(margin = margin(t = 5), size = 18),
-    axis.text.y = element_text(size = 18
+    axis.text.x = element_text(margin = margin(t = 5), size = 15),
+    axis.text.y = element_text(size = 15
     ),
     
     legend.text = element_text(size = 18),
@@ -760,8 +760,8 @@ p <- ggplot(data_final, aes(x = x, y = y, colour = colour, group = grupo)) +
     axis.ticks = element_line(colour = "black"),  
     axis.ticks.x = element_line(colour = "black"),
     axis.ticks.y = element_line(colour = "black"),
-    axis.text.x = element_text(margin = margin(t = 5), size = 18),
-    axis.text.y = element_text(size = 18
+    axis.text.x = element_text(margin = margin(t = 5), size = 15),
+    axis.text.y = element_text(size = 15
     ),
     
     legend.text = element_text(size = 18),
@@ -900,8 +900,8 @@ p <- ggplot(data_final, aes(x = x, y = y, colour = colour, group = grupo)) +
     axis.ticks = element_line(colour = "black"),  
     axis.ticks.x = element_line(colour = "black"),
     axis.ticks.y = element_line(colour = "black"),
-    axis.text.x = element_text(margin = margin(t = 5), size = 18),
-    axis.text.y = element_text(size = 18
+    axis.text.x = element_text(margin = margin(t = 5), size = 15),
+    axis.text.y = element_text(size = 15
     ),
     
     legend.text = element_text(size = 18),
@@ -1036,8 +1036,8 @@ p <- ggplot(data_final, aes(x = x, y = y, colour = colour, group = grupo)) +
     axis.ticks = element_line(colour = "black"),  
     axis.ticks.x = element_line(colour = "black"),
     axis.ticks.y = element_line(colour = "black"),
-    axis.text.x = element_text(margin = margin(t = 5), size = 18),
-    axis.text.y = element_text(size = 18
+    axis.text.x = element_text(margin = margin(t = 5), size = 15),
+    axis.text.y = element_text(size = 15
     ),
     
     legend.text = element_text(size = 18),
@@ -1171,8 +1171,8 @@ p <- ggplot(data_final, aes(x = x, y = y, colour = colour, group = grupo)) +
     axis.ticks = element_line(colour = "black"),  
     axis.ticks.x = element_line(colour = "black"),
     axis.ticks.y = element_line(colour = "black"),
-    axis.text.x = element_text(margin = margin(t = 5), size = 18),
-    axis.text.y = element_text(size = 18
+    axis.text.x = element_text(margin = margin(t = 5), size = 15),
+    axis.text.y = element_text(size = 15
     ),
     
     legend.text = element_text(size = 18),
@@ -2228,7 +2228,7 @@ p_wc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
       "Administrative Services Workers" #G4
     )
   ) +  
-  labs(#title = "White-collars",
+  labs(title = "White-collars",
     x = "Years to treatment", y = '', colour = '', shape = '') +
   theme_classic(base_size = 15) +   
   theme(
@@ -2237,8 +2237,8 @@ p_wc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
     axis.ticks = element_line(colour = "black"),  
     axis.ticks.x = element_line(colour = "black"),
     axis.ticks.y = element_line(colour = "black"),
-    axis.text.x = element_text(margin = margin(t = 5), size = 15),
-    axis.text.y = element_text(size = 15
+    axis.text.x = element_text(margin = margin(t = 5), size = 13),
+    axis.text.y = element_text(size = 13
     ),
     
     legend.text = element_text(size = 15),
@@ -2360,7 +2360,7 @@ p_bc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
                "Repair and Maintance Services"   #G9
     )
   ) +  
-  labs(#title = "Blue-collars",
+  labs(title = "Blue-collars",
     x = "Years to treatment", y = '', colour = '', shape = '') +
   theme_classic(base_size = 15) +   
   theme(
@@ -2369,8 +2369,8 @@ p_bc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
     axis.ticks = element_line(colour = "black"),  
     axis.ticks.x = element_line(colour = "black"),
     axis.ticks.y = element_line(colour = "black"),
-    axis.text.x = element_text(margin = margin(t = 5), size = 15),
-    axis.text.y = element_text(size = 15
+    axis.text.x = element_text(margin = margin(t = 5), size = 13),
+    axis.text.y = element_text(size = 13
     ),
     
     legend.text = element_text(size = 15),
