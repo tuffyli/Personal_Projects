@@ -2210,10 +2210,10 @@ p_wc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
        '#0072B2', '#009E73'	, '#E69F00', "#CC79A7"),
     labels = c(
       #"Group 0",
-               "Public Power, Directors and Managers", #G1
+               "Public Power, Directors \n and Managers", #G1
                "Sciences and Arts", #G2
                "Mid-level Technicians", #G3
-               "Administrative Services Workers" #G4
+               "Administrative Services \n Workers" #G4
                )
   ) +
   scale_shape_manual(
@@ -2222,16 +2222,17 @@ p_wc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
       15, 17, 18, 16), # Circle, Square, Triangle, Diamond
     labels = c(
       #"Group 0",
-      "Public Power, Directors and Managers", #G1
+      "Public Power, Directors \n and Managers", #G1
       "Sciences and Arts", #G2
       "Mid-level Technicians", #G3
-      "Administrative Services Workers" #G4
+      "Administrative Services \n Workers" #G4
     )
   ) +  
   labs(title = "White-collars",
     x = "Years to treatment", y = '', colour = '', shape = '') +
   theme_classic(base_size = 15) +   
   theme(
+    plot.title = element_text(size = 16),
     axis.line = element_line(),
     axis.ticks.length = unit(5, "pt"),
     axis.ticks = element_line(colour = "black"),  
@@ -2342,28 +2343,29 @@ p_bc <- ggplot(data_final, aes(x = x, y = y, color = cbo, shape = cbo, group = c
     values = c('black', '#0072B2', '#009E73'	, '#E69F00'
                #, "#CC79A7"
                ),
-    labels = c("Service Workers, Shop Salespersons", #G5
+    labels = c("Service Workers, Shop \n Salespersons", #G5
                #"Group 7",
-               "Production and Industrial Services", #G7
-               "Production and Industrial Services", #G8
-               "Repair and Maintance Services"   #G9
+               "Production and Industrial \n Services", #G7
+               "Production and Industrial \n Services", #G8
+               "Repair and Maintance \n Services"   #G9
     )
   ) +
   scale_shape_manual(
     values = c(16, 15, 17, 18
                #, 16
                ), # Circle, square, triangle, diamond
-    labels = c("Service Workers, Shop Salespersons", #G5
+    labels = c("Service Workers, Shop \n Salespersons", #G5
                #"Group 7",
-               "Production and Industrial Services", #G7
-               "Production and Industrial Services", #G8
-               "Repair and Maintance Services"   #G9
+               "Production and Industrial \n Services", #G7
+               "Production and Industrial \n Services", #G8
+               "Repair and Maintance \n Services"   #G9
     )
   ) +  
   labs(title = "Blue-collars",
     x = "Years to treatment", y = '', colour = '', shape = '') +
   theme_classic(base_size = 15) +   
   theme(
+    plot.title = element_text(size = 16),
     axis.line = element_line(),
     axis.ticks.length = unit(5, "pt"),
     axis.ticks = element_line(colour = "black"),  
@@ -2404,6 +2406,7 @@ ggsave( #Saving image
   path = "C:/Users/tuffy/Documents/IC/Graphs/united/",
   width = 1300/96, height = 565/96, dpi = 600
 )
+
 
 
 
