@@ -1509,7 +1509,7 @@ p <- ggplot(temp, aes(x = x, y = y, color = colour, shape = colour, group = grou
     legend.position = c(0.05, 0.05),         
     legend.justification = c(0, 0)           
   ) +
-  scale_x_continuous(limits = c(-9.2, 5.2),
+  scale_x_continuous(limits = c(-9.7, 5.2),
                      breaks = c(-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5),
                      labels = c('-9','-8','-7','-6','-5','-4','-3','-2','-1','0','+1','+2','+3','+4','+5')) +
   scale_y_continuous(limits = c(-0.95, 0.155),
@@ -2993,3 +2993,199 @@ for (ano in c(2003:2013)) {
     
     rm(p, qrt, ano, ext, ini, fim, delta, secs, mins, i)   
 }
+
+# ---------------------------------------------------------------------------- #
+# 13. Leave one out ----
+# ---------------------------------------------------------------------------- #
+
+data <- read.csv("C:/Users/tuffy/Documents/IC/Bases/base_atual_dum_v3.csv")
+
+
+data_final_loo <- data.frame()
+
+treatment_years <- c(2008, 2009, 2010, 2011, 2012, 2013)
+
+for (yr_out in treatment_years) {
+  
+  ini <- Sys.time()
+  
+  temp <- data %>%
+    filter(is.na(year_first_treated) | year_first_treated != yr_out)
+  
+  print("---------------------------------------------")
+  print(paste0("Leaving out treatment year: ", yr_out))
+  print("---------------------------------------------")
+  
+  # Estimation
+  calsan_did <- did::att_gt(
+    yname = "rais_",
+    gname = "year_first_treated",
+    idname = "code_id",
+    tname = "ano",
+    xformla = ~ code_id + ano_sexo + ano_branco + ano_ensino,
+    data = temp,
+    control_group = "notyettreated",
+    base_period = "universal",
+    clustervars = "code_id"
+  )
+  
+  est_calsan <- aggte(
+    MP = calsan_did,
+    type = "dynamic",
+    na.rm = TRUE
+  )
+  
+  print(est_calsan)
+  
+  plot_calsan <- ggdid(est_calsan)
+  
+  data_calsan <- ggplot_build(plot_calsan)$data[[1]]
+  data_calsan$left_out_year <- yr_out
+  
+  data_final_loo <- rbind(data_final_loo, as.data.frame(data_calsan))
+  
+  rm(temp, calsan_did, est_calsan, plot_calsan, data_calsan)
+  
+  fim <- Sys.time()
+  
+  delta <- difftime(fim, ini, units = "secs")
+  mins <- floor(as.numeric(delta) / 60)
+  secs <- round(as.numeric(delta) %% 60)
+  
+  print("---------------------------------------------")
+  print(paste0("Total time elapsed: ", mins, " mins e ", secs, " s"))
+  print("---------------------------------------------")
+  
+  rm(delta, ini, fim, mins, secs)
+}
+
+data_final_loo$left_out_year <- factor(
+  data_final_loo$left_out_year,
+  levels = c(2008, 2009, 2010, 2011, 2012, 2013),
+  labels = c("Without 2008", "Without 2009", "Without 2010",
+             "Without 2011", "Without 2012", "Without 2013")
+)
+
+data_final_loo$offset_id <- as.numeric(data_final_loo$left_out_year)
+
+data_final_loo$x_plot <- data_final_loo$x +
+  (data_final_loo$offset_id - mean(data_final_loo$offset_id)) * 0.08
+
+
+data_final_loo$offset_id <- as.numeric(data_final_loo$left_out_year)
+
+data_final_loo$x_plot <- data_final_loo$x +
+  (data_final_loo$offset_id - mean(data_final_loo$offset_id)) * 0.08
+
+p_loo <- ggplot(
+  data_final_loo,
+  aes(
+    x = x_plot,
+    y = y,
+    color = left_out_year,
+    shape = left_out_year,
+    group = left_out_year
+  )
+) +
+  geom_point(
+    size = 2.6,
+    stroke = 0.8,
+    alpha = 0.95
+  ) +
+  geom_errorbar(
+    aes(ymin = ymin, ymax = ymax),
+    width = 0.42,
+    linewidth = 1.05,
+    alpha = 1,
+    na.rm = TRUE
+  ) +
+  geom_hline(yintercept = 0, color = "#D62728", linewidth = 0.5) +
+  geom_vline(xintercept = -1, color = "#BEBEBE", linetype = "dashed", linewidth = 0.5) +
+  scale_color_manual(
+    values = c("black", "#1F77B4", "#009E60", "red", "#9467BD", "#FF7F0E"),
+    labels = c("Without 2008",
+               "Without 2009",
+               "Without 2010",
+               "Without 2011",
+               "Without 2012",
+               "Without 2013")
+  ) +
+  scale_shape_manual(
+    values = c(16, 15, 17, 18, 8, 3),
+    labels = c("Without 2008",
+               "Without 2009",
+               "Without 2010",
+               "Without 2011",
+               "Without 2012",
+               "Without 2013")
+  ) +
+  labs(x = "Years to treatment", y = "", colour = "", shape = "") +
+  theme_classic(base_size = 18) +
+  theme(
+    axis.line = element_line(colour = "black", linewidth = 0.5),
+    axis.ticks.length = unit(5, "pt"),
+    axis.ticks = element_line(colour = "black", linewidth = 0.5),
+    axis.ticks.x = element_line(colour = "black", linewidth = 0.5),
+    axis.ticks.y = element_line(colour = "black", linewidth = 0.5),
+    
+    axis.title.x = element_text(size = 18, colour = "black"),
+    axis.title.y = element_text(size = 18, colour = "black"),
+    axis.text.x = element_text(
+      margin = margin(t = 5),
+      size = 18,
+      colour = "#4D4D4D"
+    ),
+    axis.text.y = element_text(
+      size = 18,
+      colour = "#4D4D4D"
+    ),
+    
+    legend.text = element_text(size = 18, colour = "black"),
+    legend.position = c(0.035, 0.045),
+    legend.justification = c(0, 0),
+    legend.background = element_blank(),
+    legend.key = element_blank(),
+    legend.spacing.x = unit(8, "pt"),
+    legend.spacing.y = unit(1, "pt"),
+    legend.key.height = unit(14, "pt"),
+    legend.key.width = unit(20, "pt")
+  ) +
+  guides(
+    colour = guide_legend(
+      ncol = 2,
+      byrow = TRUE,
+      override.aes = list(size = 2.6, linewidth = 1.05)
+    ),
+    shape = guide_legend(
+      ncol = 2,
+      byrow = TRUE
+    )
+  ) +
+  scale_x_continuous(
+    limits = c(-9.8, 5.2),
+    breaks = c(-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4),
+    labels = c("-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2",
+               "-1", "0", "+1", "+2", "+3", "+4")
+  ) +
+  scale_y_continuous(
+    limits = c(-0.66, 0.155),
+    breaks = c(  -0.60, -0.45, -0.30, -0.15, 0, 0.15),
+    labels = c( "-0.60", "-0.45",
+               "-0.30", "-0.15", "0", "0.15")
+  )
+
+p_loo
+
+ggsave(
+  "C:/Users/tuffy/Documents/IC/Graphs/united/leave_one_out.jpeg",
+  device = "jpeg",
+  plot = p_loo,
+  width = 10, height = 6, dpi = 600
+)
+
+ggsave(
+  "C:/Users/tuffy/Documents/IC/Graphs/united/leave_one_out.pdf",
+  device = "pdf",
+  plot = p_loo,
+  width = 10, height = 6, dpi = 300
+)

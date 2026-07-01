@@ -347,7 +347,7 @@ p <- ggplot(est_rais2, aes(x = x, y = y, color = colour, group = group)) +
     axis.text.y = element_text(size = 18)
   ) +
   scale_x_continuous(
-    limits = c(-9.2, 4.5),
+    limits = c(-9.5, 4.5),
     breaks = c(-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4),
     labels = c("-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "0", "+1", "+2", "+3", "+4"),
     minor_breaks = c(-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4)
@@ -390,7 +390,7 @@ p <- ggplot(estimacoes_cbo, aes(x = x, y = y, color = colour, group = group)) +
     legend.position = "bottom"
   ) +
   scale_x_continuous(
-    limits = c(-9.2, 5.2),
+    limits = c(-9.5, 5.2),
     breaks = c(-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5),
     labels = c("-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "0", "+1", "+2", "+3", "+4", "+5")
   ) +
@@ -431,7 +431,7 @@ p <- ggplot(estimacoes_cnae, aes(x = x, y = y, color = colour, group = group)) +
     legend.position = "bottom"
   ) +
   scale_x_continuous(
-    limits = c(-9.2, 5.2),
+    limits = c(-9.5, 5.2),
     breaks = c(-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5),
     labels = c("-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "0", "+1", "+2", "+3", "+4", "+5")
   ) +
@@ -676,7 +676,7 @@ p <- ggplot(both_rais, aes(x = x, y = y, color = colour, group = group)) +
     legend.justification = c(0, 0)
   ) +
   scale_x_continuous(
-    limits = c(-9.2, 4.5),
+    limits = c(-9.5, 4.5),
     breaks = c(-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4),
     labels = c("-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "0", "+1", "+2", "+3", "+4")
   ) +
@@ -714,7 +714,7 @@ p <- ggplot(both_cbo, aes(x = x, y = y, color = colour, group = group)) +
     legend.justification = c(1, 1)
   ) +
   scale_x_continuous(
-    limits = c(-9.2, 4.5),
+    limits = c(-9.5, 4.5),
     breaks = c(-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4),
     labels = c("-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "0", "+1", "+2", "+3", "+4")
   ) +
@@ -754,7 +754,7 @@ p <- ggplot(both_cnae, aes(x = x, y = y, color = colour, group = group)) +
     legend.justification = c(1, 1)
   ) +
   scale_x_continuous(
-    limits = c(-9.2, 4.5),
+    limits = c(-9.5, 4.5),
     breaks = c(-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4),
     labels = c("-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "0", "+1", "+2", "+3", "+4")
   ) +
